@@ -1,10 +1,29 @@
-let express = require('express');
-let xml2js = require('xml2js');
+const express = require('express');
+const xml2js = require('xml2js');
 
-let app = express();
+const app = express();
 
 
-function getScript(url) {
+let xmlSrc = 'https://www.vedomosti.ru/rss/news.xml';
+
+
+
+app.use(express.static('public'));
+
+
+app.get('/ajax', (req, res) => {
+	importData(xmlSrc).then(xmlSrc => xml2js.parseStringPromise(xmlSrc))
+	.then(xml => JSON.stringify(xml))
+    .then(json => res.json(json));
+	console.log(req.query);
+});
+
+app.listen(3000, () => {
+	console.log('Listening on port 3000');
+});
+
+
+function importData(url) {
     return new Promise((resolve, reject) => {
         const http      = require('http'),
               https     = require('https');
@@ -33,47 +52,3 @@ function getScript(url) {
         });
     });
 };
-
-
-let xml = 'https://www.vedomosti.ru/rss/news.xml';
-
-let json = '';
-
-
-
-function ff(xml) {
-	xml2js.parseString(xml, (err, result) => {
-		if (err) {
-		  throw err
-		}
-		json = JSON.stringify(result, null, 4)
-		// console.log(json)
-	});
-}
-
-
-
-
-
-
-
-
-
-
-app.use(express.static('public'));
-
-
-
-// app.use(express.json()); // разрешаем обмен в формате JSON
-// app.use(express.urlencoded({ extended: false })); // обработка аргументов в url
-
-app.get('/ajax', (req, res) => {
-	getScript(xml).then(xml => ff(xml))
-	.then(() => res.json(json));
-	console.log(req.query);
-	// res.send({message:'Привет, '+req.query.name}); // отправляем ответ в формате JSON
-});
-
-app.listen(3000, () => {
-	console.log('Listening on port 3000!');
-});
