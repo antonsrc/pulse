@@ -5,7 +5,7 @@ const app = express();
 
 let xmlSrc = 'https://www.vedomosti.ru/rss/news.xml';
 
-app.use(express.static('public'));
+app.use(express.static('docs'));
 
 app.get('/ajax', (req, res) => {
 	fetch(xmlSrc)
