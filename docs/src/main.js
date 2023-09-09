@@ -13,6 +13,7 @@ runButton.addEventListener('click', () => {
 
 function temp(data) {
     let jjson = data['rss']['channel'][0]['item'];
+    container.innerHTML = '';
     for (let i = 0; i < jjson.length; i++) {
         let div0 = document.createElement('div');
         div0.textContent = `${i+1}: ${jjson[i]['title']}`;
@@ -22,14 +23,11 @@ function temp(data) {
 
 
 async function sendUser() {
-    const response = await fetch("/ajax?name="+encodeURIComponent("Tomsk"));
-  if (response.ok) { // Успешно?
-    let data = await response.json(); // ждем результат в формате json
+    const response = await fetch("/ajax");
+    let data = await response.json();
     let data2 = await JSON.parse(data);
     temp(data2);
-    
-    console.log(data); // выводим ответ
-  }
+
 }
 
 
