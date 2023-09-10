@@ -21,3 +21,13 @@ a {
     color: inherit;
     text-decoration: none;
 }
+
+#container {
+    font-size: 1.25rem;
+}
+
+#updButton {
+    height: 2rem;
+    width: 5rem;
+    margin: 1rem;
+}

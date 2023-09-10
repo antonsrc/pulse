@@ -1,33 +1,42 @@
 "use strict"
 
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 
 let container = document.getElementById("container");
-let runButton = document.getElementById("runButton");
+let updButton = document.getElementById("updButton");
 
-runButton.addEventListener('click', () => {
-    sendUser();
+window.addEventListener('DOMContentLoaded', () => {
+    getNews();
+});
+
+updButton.addEventListener('click', () => {
+    getNews();
 });
 
 
 
-function temp(data) {
-    let jjson = data['rss']['channel'][0]['item'];
+function showNews(data) {
+    let jsonItem = data['rss']['channel'][0]['item'];
     container.innerHTML = '';
-    for (let i = 0; i < jjson.length; i++) {
+    for (let i = 0; i < jsonItem.length; i++) {
         let div0 = document.createElement('div');
-        div0.textContent = `${i+1}: ${jjson[i]['title']}`;
+        const currentDate = new Date(jsonItem[i]['pubDate']);
+        const options = {
+            hour: 'numeric', minute: 'numeric', second: 'numeric', timeZoneName: 'long'
+        }
+          
+        div0.textContent = `${i+1}: ${jsonItem[i]['title']} | ${currentDate.toLocaleDateString('ru-RU', options)}`;
         container.append(div0);
-    } 
+    }
+    // console.log(jsonItem) 
 }
 
 
-async function sendUser() {
-    const response = await fetch("/ajax");
-    let data = await response.json();
-    let data2 = await JSON.parse(data);
-    temp(data2);
-
+async function getNews() {
+    fetch("/ajax")
+    .then(res => res.json())
+    .then(data => JSON.parse(data))
+    .then(json => showNews(json));
 }
 
 
