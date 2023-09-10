@@ -31,3 +31,7 @@ a {
     width: 5rem;
     margin: 1rem;
 }
+
+.divColorA {
+    background-color: rgb(254, 245, 232);
+}

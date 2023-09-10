@@ -1,6 +1,6 @@
 "use strict"
 
-const VERSION = '0.1.1';
+const VERSION = '0.2.1';
 
 let container = document.getElementById("container");
 let updButton = document.getElementById("updButton");
@@ -20,6 +20,11 @@ function showNews(data) {
     container.innerHTML = '';
     for (let i = 0; i < jsonItem.length; i++) {
         let div0 = document.createElement('div');
+
+        if (i % 2 == 0) {
+            div0.classList.add("divColorA");
+        }
+       
         const currentDate = new Date(jsonItem[i]['pubDate']);
         const options = {
             hour: 'numeric', minute: 'numeric', second: 'numeric', timeZoneName: 'long'

@@ -4,6 +4,9 @@ const fetch = require('node-fetch');
 
 const app = express();
 
+const PORT = 3000;
+// const PORT = 443;
+
 let xmlSrc = 'https://www.vedomosti.ru/rss/news.xml';
 
 app.use(express.static('docs'));
@@ -17,6 +20,4 @@ app.get('/ajax', (req, res) => {
 	console.log(req.query);
 });
 
-app.listen(443, () => {
-	console.log('Listening on port 443');
-});
+app.listen(PORT);
