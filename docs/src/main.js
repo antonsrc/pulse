@@ -18,22 +18,35 @@ updButton.addEventListener('click', () => {
 function showNews(data) {
     let jsonItem = data['rss']['channel'][0]['item'];
     container.innerHTML = '';
-    for (let i = 0; i < jsonItem.length; i++) {
-        let div0 = document.createElement('div');
+    jsonItem.forEach((item, index) => {
+        let comDiv = document.createElement('div');
+        let p0 = document.createElement('p');
+        let p1 = document.createElement('p');
 
-        if (i % 2 == 0) {
-            div0.classList.add("divColorA");
+        if (index % 2 == 0) {
+            comDiv.classList.add("divColorA");
+        } else {
+            comDiv.classList.add("divColorB");
         }
        
-        const currentDate = new Date(jsonItem[i]['pubDate']);
+        const currentDate = new Date(item['pubDate']);
         const options = {
-            hour: 'numeric', minute: 'numeric', second: 'numeric', timeZoneName: 'long'
+            // timeZone: "Europe/Moscow"
         }
+        p0.textContent = `${currentDate.toLocaleString('ru-RU', options)}`;
+        p0.classList.add("littleData");
+        comDiv.append(p0);
+
+        // currentDate.getTime()
+
           
-        div0.textContent = `${i+1}: ${jsonItem[i]['title']} | ${currentDate.toLocaleDateString('ru-RU', options)}`;
-        container.append(div0);
-    }
-    // console.log(jsonItem) 
+        p1.textContent = `${item['title']}`;
+        comDiv.append(p1);
+        
+        
+        container.append(comDiv);
+    }); 
+    console.log(jsonItem);
 }
 
 

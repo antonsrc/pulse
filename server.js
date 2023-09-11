@@ -17,7 +17,7 @@ app.get('/ajax', (req, res) => {
     .then(xmlSrc => xml2js.parseStringPromise(xmlSrc))
 	.then(xml => JSON.stringify(xml))
     .then(json => res.json(json));
-	console.log(req.query);
+	// console.log(req.query);
 });
 
 app.listen(PORT);
