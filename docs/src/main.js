@@ -1,6 +1,6 @@
 "use strict"
 
-const VERSION = '0.2.2';
+const VERSION = '0.3.0';
 
 let container = document.getElementById("container");
 let updButton = document.getElementById("updButton");
@@ -67,4 +67,4 @@ async function getNews() {
 function randomInt(min, max) {
     let rand = min + Math.random() * (max + 1 - min);
     return Math.floor(rand);
-  }
+}

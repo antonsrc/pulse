@@ -35,10 +35,10 @@ function loadInDB(data) {
         host: "localhost",
         database: "f0695925_pulse",
 
-        // user: "root",
-        // password: jsonFile['passLocal']
-        user: "f0695925_pulse",
-        password: jsonFile['passNet']
+        user: "root",
+        password: jsonFile['passLocal']
+        // user: "f0695925_pulse",
+        // password: jsonFile['passNet']
     }).promise();
 
     connection.query(`CREATE TABLE 
