@@ -6,8 +6,7 @@ const fs = require("fs");
 
 const app = express();
 
-const PORT = 3000;
-// const PORT = 443;
+const PORT = 443;
 
 const fileContent = fs.readFileSync("secret.json", "utf8");
 const jsonFile = JSON.parse(fileContent);
@@ -17,16 +16,17 @@ let xmlSrc = 'https://www.vedomosti.ru/rss/news.xml';
 app.use(express.static('docs'));
 
 app.get('/ajax', (req, res) => {
-
 	fetch(xmlSrc)
     .then(xml => xml.text())
     .then(xmlText => xml2js.parseStringPromise(xmlText))
-    .then(obj => extractData(obj))
+    
 
     .then(data => loadInDB(data))
-
+    .then(() => extractData())
     .then(newObj => JSON.stringify(newObj))
     .then(json => res.json(json));
+
+    
 });
 
 app.listen(PORT);
@@ -34,13 +34,12 @@ app.listen(PORT);
 function loadInDB(data) {
     const connection = mysql.createConnection({
         host: "localhost",
+        database: "f0695925_pulse",
 
         user: "root",
-        database: "usersdb",
         password: jsonFile['passLocal']
     
         // user: "f0695925_pulse",
-        // database: "f0695925_pulse",
         // password: jsonFile['passNet']
     }).promise();
 
@@ -54,76 +53,87 @@ function loadInDB(data) {
         ) ENGINE=InnoDB CHARSET=utf8;`
     );
 
-
+    
     
     connection.query(`SELECT Max (date) FROM vedomosti_ru_rss_news LIMIT 1`)
         .then(res => {
-            console.log(res[0][0]['Max (date)']);
-            
-            for (let item in data) {
-                console.log(data[item]['date']);
-                if (data[item]['date'] >= res[0][0]['Max (date)']) {
-                    console.log('ARR')
+            return res[0][0]['Max (date)'];
+        })
+        .then(maxDate => {
+            if (maxDate == null) {
+                for (let item of data) {
+                    let values = [data[item]['date'], data[item]['title'], data[item]['link']];
+                    let sqlQuery = 'INSERT INTO vedomosti_ru_rss_news(date, title, link) VALUES(?, ?, ?)';
+                    connection.query(sqlQuery, values, function(err, results) {
+                        if(err) console.log(err);
+                        else console.log("Данные добавлены");
+                    });
                 }
-                
+            } else {
+                let filteredData = Object.keys(data).filter(item => new Date(Number(item)) > maxDate);
+                for (let item of filteredData) {
+                    if (data[item]['date'] > maxDate) {
+                        let values = [data[item]['date'], data[item]['title'], data[item]['link']];
+                        let sqlQuery = 'INSERT INTO vedomosti_ru_rss_news(date, title, link) VALUES(?, ?, ?)';
+                        connection.query(sqlQuery, values, function(err, results) {
+                            if(err) console.log(err);
+                            else console.log("Данные добавлены");
+                        });
+                    }
+                }
             }
 
-
-
-            return 0;
+        })
+        .finally(() => {
+            connection.end(function(err) {
+                if (err) {
+                    return console.log("Ошибка: " + err.message);
+                }
+                    console.log("Подключение закрыто");
+                }
+            );
         });
     
 
-
-    // const currentDate = new Date(maxDate);
-    // const options = {
-    // // timeZone: "Europe/Moscow"
-    // }
-    // const maxDateReal = currentDate.toLocaleString('ru-RU', options);
-    // console.log(maxDate, ' 2');
-    // console.log(maxDateReal, ' 3');
-
-    for (let item in data) {
-        let values = [data[item]['date'], data[item]['title'], data[item]['link']];
-        let sqlQuery = 'INSERT INTO vedomosti_ru_rss_news(date, title, link) VALUES(?, ?, ?)';
-        connection.query(sqlQuery, values, function(err, results) {
-            if(err) console.log(err);
-            else console.log("Данные добавлены");
-        });
-    }
-
-
-
-
-
-
-    
-    // connection.query("SELECT date, title FROM vedomosti_ru_rss_news",
-    //     function(err, results, fields) {
-    //         console.log(results); // собственно данные
-    // });
-
-    connection.end(function(err) {
-        if (err) {
-            return console.log("Ошибка: " + err.message);
-        }
-            console.log("Подключение закрыто");
-        });
-    
         return data;
 }
 
-function extractData(data) {
-    let newObj = {};
-    let jsonItem = data['rss']['channel'][0]['item'];
-    jsonItem.forEach(i => {
-        let date = new Date(i['pubDate']);
-        let dateTS = date.getTime();
-        newObj[dateTS] = {
-            'title': i['title'],
-            'link': i['link'],
-            'date': date
-        };
-    }); 
+async function extractData() {
+    const connection = mysql.createConnection({
+        host: "localhost",
+        database: "f0695925_pulse",
+
+        user: "root",
+        password: jsonFile['passLocal']
+    
+        // user: "f0695925_pulse",
+        // password: jsonFile['passNet']
+    }).promise();
+    
+    let newObj  = await connection.query(`SELECT * FROM vedomosti_ru_rss_news ORDER BY date DESC`)
+    .then(res => {
+        let newRes = {};
+        res[0].forEach(i => {
+            let date = new Date(i['date']);
+            let dateTS = date.getTime();
+            newRes[dateTS] = {
+                'title': i['title'],
+                'link': i['link'],
+                'date': date
+            };
+        });
+        return newRes;
+    })
+    .finally(() => {
+        connection.end(function(err) {
+            if (err) {
+                return console.log("Ошибка: " + err.message);
+            }
+                console.log("Подключение закрыто");
+            }
+        );
+    });
+    
+
     return newObj;
 }

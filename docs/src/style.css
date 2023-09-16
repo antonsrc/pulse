@@ -14,7 +14,7 @@ svg {
 
 body {
     margin: 0;
-    background-color: blanchedalmond;
+    background-color: rgb(255, 255, 255);
 }
 
 a {
@@ -32,16 +32,15 @@ a {
     margin: 1rem;
 }
 
-.divColorA {
+/* .divColorA {
     background-color: rgb(254, 245, 232);
 }
 
 .divColorB {
     background-color: rgba(255, 255, 255, 0);
-}
+} */
 
-.divColorA,
-.divColorB {
+.divColor {
     width: 100%;
     display: flex;
     flex-direction: row;
