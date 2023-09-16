@@ -19,10 +19,9 @@ app.get('/ajax', (req, res) => {
 	fetch(xmlSrc)
     .then(xml => xml.text())
     .then(xmlText => xml2js.parseStringPromise(xmlText))
-    
-
+    .then(data => extractDataFirst(data))
     .then(data => loadInDB(data))
-    .then(() => extractData())
+    .then(connect => extractData(connect))
     .then(newObj => JSON.stringify(newObj))
     .then(json => res.json(json));
 
@@ -36,11 +35,10 @@ function loadInDB(data) {
         host: "localhost",
         database: "f0695925_pulse",
 
-        user: "root",
-        password: jsonFile['passLocal']
-    
-        // user: "f0695925_pulse",
-        // password: jsonFile['passNet']
+        // user: "root",
+        // password: jsonFile['passLocal']
+        user: "f0695925_pulse",
+        password: jsonFile['passNet']
     }).promise();
 
     connection.query(`CREATE TABLE 
@@ -61,8 +59,10 @@ function loadInDB(data) {
         })
         .then(maxDate => {
             if (maxDate == null) {
-                for (let item of data) {
-                    let values = [data[item]['date'], data[item]['title'], data[item]['link']];
+
+
+                for (let item in data) {
+                    let values = [new Date(data[item]['date']), data[item]['title'], data[item]['link']];
                     let sqlQuery = 'INSERT INTO vedomosti_ru_rss_news(date, title, link) VALUES(?, ?, ?)';
                     connection.query(sqlQuery, values, function(err, results) {
                         if(err) console.log(err);
@@ -72,8 +72,8 @@ function loadInDB(data) {
             } else {
                 let filteredData = Object.keys(data).filter(item => new Date(Number(item)) > maxDate);
                 for (let item of filteredData) {
-                    if (data[item]['date'] > maxDate) {
-                        let values = [data[item]['date'], data[item]['title'], data[item]['link']];
+                    if (new Date(data[item]['date']) > maxDate) {
+                        let values = [new Date(data[item]['date']), data[item]['title'], data[item]['link']];
                         let sqlQuery = 'INSERT INTO vedomosti_ru_rss_news(date, title, link) VALUES(?, ?, ?)';
                         connection.query(sqlQuery, values, function(err, results) {
                             if(err) console.log(err);
@@ -95,22 +95,11 @@ function loadInDB(data) {
         });
     
 
-        return data;
+    return connection;
 }
 
-async function extractData() {
-    const connection = mysql.createConnection({
-        host: "localhost",
-        database: "f0695925_pulse",
-
-        user: "root",
-        password: jsonFile['passLocal']
-    
-        // user: "f0695925_pulse",
-        // password: jsonFile['passNet']
-    }).promise();
-    
-    let newObj  = await connection.query(`SELECT * FROM vedomosti_ru_rss_news ORDER BY date DESC`)
+async function extractData(connect) {
+    return await connect.query(`SELECT * FROM vedomosti_ru_rss_news ORDER BY date DESC`)
     .then(res => {
         let newRes = {};
         res[0].forEach(i => {
@@ -125,7 +114,7 @@ async function extractData() {
         return newRes;
     })
     .finally(() => {
-        connection.end(function(err) {
+        connect.end(function(err) {
             if (err) {
                 return console.log("Ошибка: " + err.message);
             }
@@ -133,7 +122,19 @@ async function extractData() {
             }
         );
     });
-    
+}
 
+function extractDataFirst(data) {
+    let newObj = {};
+    let jsonItem = data['rss']['channel'][0]['item'];
+    jsonItem.forEach(i => {
+        let currentDate = new Date(i['pubDate']);
+        let currentDateTS = currentDate.getTime();
+        newObj[currentDateTS] = {
+            'title': i['title'],
+            'link': i['link'],
+            'date': i['pubDate']
+        };
+    }); 
     return newObj;
 }
