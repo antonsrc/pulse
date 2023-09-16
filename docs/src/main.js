@@ -18,7 +18,7 @@ function showNews(data) {
     let index = 1;
     let nowDay = new Date();
     let colorA = 'rgb(254, 245, 232)';
-    let colorB = 'rgba(254, 245, 232, 0.5)';
+    let colorB = 'rgba(254, 245, 232, 0.7)';
 
     for (let item in data) {
         let comDiv = document.createElement('div');
