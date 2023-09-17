@@ -41,8 +41,8 @@ function showNews(data) {
             let randR = randomInt(200, 255);
             let randG = randomInt(200, 255);
             // let randB = randomInt(50, 255);
-            colorA = `rgb(${randR}, ${randG}, 200)`;
-            colorB = `rgba(${randR}, ${randG}, 200, 0.5)`;
+            colorA = `rgb(${randR}, ${randG}, 170)`;
+            colorB = `rgba(${randR}, ${randG}, 170, 0.5)`;
             nowDay = currentDate.getDate();
         }
         
