@@ -33,7 +33,9 @@ app.get('/ajax', (req, res) => {
     .then(xml => xml.text())
     .then(xmlText => xml2js.parseStringPromise(xmlText))
     .then(json => extractToObjWithKeys(json))
-    .then(obj => loadToDatabase(obj))
+    .then(obj => loadToDB(obj))
+    .then(() => selectQueryToDB())
+    
     .then(newObj => JSON.stringify(newObj))
     .then(json => res.json(json));
 });
@@ -54,13 +56,12 @@ function extractToObjWithKeys(json) {
     return obj;
 }
 
-function loadToDatabase(obj) {
+function loadToDB(obj) {
     const connection = mysql.createConnection(DB_SETTINGS).promise();
     connection.query(createQuery);
     return connection.query(`SELECT Max (date) FROM vedomosti_ru_rss_news LIMIT 1`)
     .then(res => res[0][0]['Max (date)'])
     .then(maxDate => queryInsertData(maxDate, obj, connection))
-    .then(() => querySelectAllData(connection))
     .finally(() => connection.end());
 }
 
@@ -74,7 +75,8 @@ function queryInsertData(maxDate, obj, connection) {
     });
 }
 
-function querySelectAllData(connection) {
+function selectQueryToDB() {
+    const connection = mysql.createConnection(DB_SETTINGS).promise();
     return connection.query(`SELECT * FROM vedomosti_ru_rss_news ORDER BY date DESC`)
     .then(res => {
         let filteredRes = {};
@@ -88,5 +90,6 @@ function querySelectAllData(connection) {
             };
         });
         return filteredRes;
-    });
+    })
+    .finally(() => connection.end());
 }

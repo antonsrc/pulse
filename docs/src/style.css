@@ -26,20 +26,6 @@ a {
     font-size: 1.1rem;
 }
 
-#updButton {
-    height: 2rem;
-    width: 5rem;
-    margin: 1rem;
-}
-
-/* .divColorA {
-    background-color: rgb(254, 245, 232);
-}
-
-.divColorB {
-    background-color: rgba(255, 255, 255, 0);
-} */
-
 .divColor {
     width: 100%;
     display: flex;
@@ -54,4 +40,32 @@ a {
 .littleData {
     color: gray;
     font-size: 0.7rem;
+}
+
+.standardButton {
+    background-color: rgb(156, 97, 186);
+    height: 4rem;
+    font-size: 2rem;
+    padding-left: 20px;
+    padding-right: 20px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: fit-content;
+}
+
+.standardButton:focus,
+.standardButton:hover {
+    background-color: rgb(240, 211, 255);
+}
+
+.LinkNews {
+    background-color: rgb(246, 227, 255);
+    cursor: pointer;
+}
+
+.LinkNews:focus,
+.LinkNews:hover {
+    background-color: rgb(195, 79, 253);
 }

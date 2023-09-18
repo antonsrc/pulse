@@ -3,7 +3,9 @@
 const VERSION = '0.3.0';
 
 let container = document.getElementById("container");
+let keywords = document.getElementById("keywords");
 let updButton = document.getElementById("updButton");
+let dialogNews = document.getElementById("dialogNews");
 
 window.addEventListener('DOMContentLoaded', () => {
     getNews();
@@ -12,6 +14,16 @@ window.addEventListener('DOMContentLoaded', () => {
 updButton.addEventListener('click', () => {
     getNews();
 });
+
+function getNews() {
+    let importedData = fetch("/ajax")
+    .then(res => res.json())
+    .then(data => JSON.parse(data));
+    importedData.then(json => showNews(json));
+    importedData.then(json => getKeywords(json))
+        .then(words => showKeywords(words))
+        .then(words => setEventListenersForLabels(words));
+}
 
 function showNews(data) {
     container.innerHTML = '';
@@ -57,14 +69,82 @@ function showNews(data) {
     }
 }
 
-async function getNews() {
-    fetch("/ajax")
-    .then(res => res.json())
-    .then(data => JSON.parse(data))
-    .then(json => showNews(json));
-}
-
 function randomInt(min, max) {
     let rand = min + Math.random() * (max + 1 - min);
     return Math.floor(rand);
+}
+
+function getKeywords(data) {
+    let obj = {};
+    for (let item in data) {
+        let withoutSpecSymbols = data[item]['title'].replace(/[,\:]+/g, ' ');
+        let withoutSpaces = withoutSpecSymbols.replace(/\s+/g, ' ').trim();
+        let arr = withoutSpaces.split(' ');
+        arr.forEach(i => {
+            let link = data[item]['link'];
+            let title = data[item]['title'];
+            if (obj.hasOwnProperty(i)) {
+                obj[i]['count']++;
+                obj[i]['links'][link] = title;
+            } else {
+                obj[i] = {
+                    'count': 1,
+                    'links': {
+                        [link]: title
+                    }
+                };
+            }
+        });
+    }
+    return obj;
+}
+
+function setEventListenersForLabels(words) {
+    document.querySelectorAll('.LinkNews').forEach(item => {
+        item.addEventListener('click', e => {
+            let idLabel = e.target.id;
+            openNews(encodeURIComponent(idLabel), words);
+        });
+    });
+}
+
+function openNews(idLabel, words) {
+    let spanClose = document.createElement('span');
+    spanClose.textContent = 'Закрыть';
+    spanClose.style.backgroundColor = 'red';
+    dialogNews.innerHTML = '';
+    dialogNews.append(spanClose);
+    spanClose.addEventListener('click', () => {
+        dialogNews.close();
+    });
+
+    dialogNews.showModal();
+
+    let word = decodeURIComponent(idLabel);
+
+    console.log(words[word])
+    for (let item in words[word]['links']) {
+        let divNews = document.createElement('div');
+        let aNews = document.createElement('a');
+        divNews.append(aNews);
+        aNews.href = item;
+        aNews.textContent = words[word]['links'][item];
+        dialogNews.append(divNews);
+    }
+
+}
+
+
+
+function showKeywords(data) {
+    keywords.innerHTML = '';
+    for (let item in data) {
+        let spanWord = document.createElement('span');
+        spanWord.textContent = item + " ";
+        spanWord.style.fontSize = `${data[item]['count']*0.15}rem`;
+        spanWord.id = item;
+        spanWord.classList.add("LinkNews");
+        keywords.append(spanWord);
+    }
+    return data;
 }
