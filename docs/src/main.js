@@ -1,6 +1,6 @@
 "use strict"
 
-const VERSION = '0.3.0';
+const VERSION = '0.4.1';
 
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
@@ -19,7 +19,7 @@ function getNews() {
     let importedData = fetch("/ajax")
     .then(res => res.json())
     .then(data => JSON.parse(data));
-    importedData.then(json => showNews(json));
+    // importedData.then(json => showNews(json));
     importedData.then(json => getKeywords(json))
         .then(words => showKeywords(words))
         .then(words => setEventListenersForLabels(words));
@@ -39,10 +39,7 @@ function showNews(data) {
         let p1 = document.createElement('p');
 
         const currentDate = new Date(Number(item));
-        const options = {
-            // timeZone: "Europe/Moscow"
-        }
-        p0.textContent = `${currentDate.toLocaleString('ru-RU', options)} [${index}]`;
+        p0.textContent = `${currentDate.toLocaleString('ru-RU')} [${index}]`;
         p0.classList.add("littleData");
         comDiv.append(p0);
 
@@ -52,7 +49,6 @@ function showNews(data) {
         if (nowDay != currentDate.getDate()) {
             let randR = randomInt(200, 255);
             let randG = randomInt(200, 255);
-            // let randB = randomInt(50, 255);
             colorA = `rgb(${randR}, ${randG}, 170)`;
             colorB = `rgba(${randR}, ${randG}, 170, 0.5)`;
             nowDay = currentDate.getDate();
@@ -77,7 +73,8 @@ function randomInt(min, max) {
 function getKeywords(data) {
     let obj = {};
     for (let item in data) {
-        let withoutSpecSymbols = data[item]['title'].replace(/[,\:]+/g, ' ');
+        let lowerCaseWords = data[item]['title'].toLowerCase();
+        let withoutSpecSymbols = lowerCaseWords.replace(/[^\p{Alpha}\p{M}\p{Nd}]+/gu, ' ');
         let withoutSpaces = withoutSpecSymbols.replace(/\s+/g, ' ').trim();
         let arr = withoutSpaces.split(' ');
         arr.forEach(i => {
@@ -103,12 +100,12 @@ function setEventListenersForLabels(words) {
     document.querySelectorAll('.LinkNews').forEach(item => {
         item.addEventListener('click', e => {
             let idLabel = e.target.id;
-            openNews(encodeURIComponent(idLabel), words);
+            showNews(encodeURIComponent(idLabel), words);
         });
     });
 }
 
-function openNews(idLabel, words) {
+function showNews(idLabel, words) {
     let spanClose = document.createElement('span');
     spanClose.textContent = 'Закрыть';
     spanClose.style.backgroundColor = 'red';
@@ -118,30 +115,41 @@ function openNews(idLabel, words) {
         dialogNews.close();
     });
 
+    dialogNews.inert = true;
     dialogNews.showModal();
+    dialogNews.inert = false;
 
     let word = decodeURIComponent(idLabel);
+    
+    let index = 1;
+    let colorA = 'rgb(240, 211, 255)';
+    let colorB = 'rgba(240, 211, 255, 0.1)';
 
-    console.log(words[word])
     for (let item in words[word]['links']) {
         let divNews = document.createElement('div');
         let aNews = document.createElement('a');
         divNews.append(aNews);
         aNews.href = item;
         aNews.textContent = words[word]['links'][item];
+
+        index++;
+        if (index % 2 == 0) {
+            divNews.style.backgroundColor = colorA;
+        } else {
+            divNews.style.backgroundColor = colorB;
+        }
+
         dialogNews.append(divNews);
     }
-
 }
-
-
 
 function showKeywords(data) {
     keywords.innerHTML = '';
     for (let item in data) {
-        let spanWord = document.createElement('span');
-        spanWord.textContent = item + " ";
-        spanWord.style.fontSize = `${data[item]['count']*0.15}rem`;
+        let spanWord = document.createElement('div');
+        spanWord.style.display = 'inline-block';
+        spanWord.textContent = item;
+        spanWord.style.fontSize = `${data[item]['count']*0.1}rem`;
         spanWord.id = item;
         spanWord.classList.add("LinkNews");
         keywords.append(spanWord);

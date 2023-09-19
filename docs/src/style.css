@@ -7,6 +7,15 @@
     box-sizing: border-box;
 }
 
+dialog {
+    border: 0px white solid;
+    padding: 0px;
+}
+
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
 img,
 svg {
     display: block;
@@ -53,19 +62,21 @@ a {
     flex-direction: column;
     justify-content: center;
     width: fit-content;
+    transition: background-color 0.3s linear;
 }
 
-.standardButton:focus,
 .standardButton:hover {
     background-color: rgb(240, 211, 255);
+    transition: background-color 0.1s linear;
 }
 
 .LinkNews {
     background-color: rgb(246, 227, 255);
     cursor: pointer;
+    transition: background-color 0.3s linear;
 }
 
-.LinkNews:focus,
 .LinkNews:hover {
     background-color: rgb(195, 79, 253);
+    transition: background-color 0.1s linear;
 }
