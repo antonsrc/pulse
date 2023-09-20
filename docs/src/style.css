@@ -31,19 +31,11 @@ a {
     text-decoration: none;
 }
 
-#container {
-    font-size: 1.1rem;
-}
-
 .divColor {
     width: 100%;
     display: flex;
     flex-direction: row;
     align-items: baseline;
-}
-
-#container p {
-    margin: 0rem 0.3rem 0.2rem;
 }
 
 .littleData {
@@ -79,4 +71,36 @@ a {
 .LinkNews:hover {
     background-color: rgb(195, 79, 253);
     transition: background-color 0.1s linear;
+}
+
+#keywords {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 1.5rem;
+}
+
+#container {
+    font-size: 1.1rem;
+}
+
+#container p {
+    margin: 0rem 0.3rem 0.2rem;
+}
+
+#header {
+    padding-right: 0.5rem;
+    order: 1;
+    width: 100%;
+    color: #505050;
+    background: rgba(240, 211, 255, 0.5);
+    text-align: right;
+    position: fixed;
+    height: 1.5rem;
+}
+
+#header {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }

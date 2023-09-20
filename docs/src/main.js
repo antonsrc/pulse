@@ -1,31 +1,34 @@
 "use strict"
 
-const VERSION = '0.4.1';
+const VERSION = '0.5.0';
 
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
 let updButton = document.getElementById("updButton");
 let dialogNews = document.getElementById("dialogNews");
+let header = document.getElementById("header");
+
+header.textContent = `pulse v.${VERSION}`;
 
 window.addEventListener('DOMContentLoaded', () => {
     getNews();
 });
 
-updButton.addEventListener('click', () => {
-    getNews();
-});
+// updButton.addEventListener('click', () => {
+//     getNews();
+// });
 
 function getNews() {
     let importedData = fetch("/ajax")
     .then(res => res.json())
-    .then(data => JSON.parse(data));
+    .then(data => JSON.parse(data))
     // importedData.then(json => showNews(json));
-    importedData.then(json => getKeywords(json))
-        .then(words => showKeywords(words))
-        .then(words => setEventListenersForLabels(words));
+    .then(json => getKeywords(json))
+    .then(words => showKeywords(words))
+    .then(words => setEventListenersForLabels(words));
 }
 
-function showNews(data) {
+function showNewsMain(data) {
     container.innerHTML = '';
     let index = 1;
     let nowDay = new Date();
@@ -74,10 +77,29 @@ function getKeywords(data) {
     let obj = {};
     for (let item in data) {
         let lowerCaseWords = data[item]['title'].toLowerCase();
-        let withoutSpecSymbols = lowerCaseWords.replace(/[^\p{Alpha}\p{M}\p{Nd}]+/gu, ' ');
-        let withoutSpaces = withoutSpecSymbols.replace(/\s+/g, ' ').trim();
-        let arr = withoutSpaces.split(' ');
-        arr.forEach(i => {
+        
+        // remove all special symbols
+        let filteredSymbols = lowerCaseWords.replace(/[^\p{Alpha}\p{M}\p{Nd}]+/giu, ' ');
+        
+        // remove all digits
+        let filteredDigits = filteredSymbols.replace(/(\b|^)\d{1,2}(\b|$)/gi, ' ');
+        let filteredZeros = filteredDigits.replace(/(\b|^)000(\b|$)/gi, ' ');
+
+        // remove all spaces
+        let filteredSpaces = filteredZeros.replace(/\s+/g, ' ').trim();
+        let wordArr = filteredSpaces.split(' ');
+
+        // remove all conjunctions and prepositions
+        let conjuctions = [
+            'в', 'по', 'над', 'у', 'из', 'за', 'к', 'под',
+            'о', 'на', 'для', 'об', 'с', 'не', 'что', 'при',
+            'до', 'и', 'от', 'млн', 'почти', 'могут', 'свою',
+            'все', 'всё', 'год', 'году'
+        ];
+        let filteredArr = wordArr.filter(item => !conjuctions.includes(item));
+
+        
+        filteredArr.forEach(i => {
             let link = data[item]['link'];
             let title = data[item]['title'];
             if (obj.hasOwnProperty(i)) {
@@ -94,15 +116,6 @@ function getKeywords(data) {
         });
     }
     return obj;
-}
-
-function setEventListenersForLabels(words) {
-    document.querySelectorAll('.LinkNews').forEach(item => {
-        item.addEventListener('click', e => {
-            let idLabel = e.target.id;
-            showNews(encodeURIComponent(idLabel), words);
-        });
-    });
 }
 
 function showNews(idLabel, words) {
@@ -146,13 +159,20 @@ function showNews(idLabel, words) {
 function showKeywords(data) {
     keywords.innerHTML = '';
     for (let item in data) {
-        let spanWord = document.createElement('div');
-        spanWord.style.display = 'inline-block';
+        let spanWord = document.createElement('span');
         spanWord.textContent = item;
-        spanWord.style.fontSize = `${data[item]['count']*0.1}rem`;
-        spanWord.id = item;
+        spanWord.style.fontSize = `${data[item]['count']*0.15}rem`;
+        spanWord.id = encodeURIComponent(item);
         spanWord.classList.add("LinkNews");
         keywords.append(spanWord);
     }
     return data;
+}
+
+function setEventListenersForLabels(words) {
+    keywords.addEventListener('click', e => {
+        if (e.target.className == 'LinkNews') {
+            showNews(e.target.id, words);
+        }
+    });
 }
