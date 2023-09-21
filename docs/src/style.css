@@ -8,8 +8,9 @@
 }
 
 dialog {
-    border: 0px white solid;
-    padding: 0px;
+    border: none;
+    padding: 0;
+    width: 100%;
 }
 
 dialog::backdrop {
@@ -63,14 +64,27 @@ a {
 }
 
 .LinkNews {
-    background-color: rgb(246, 227, 255);
+    /* background-color: rgb(246, 227, 255); */
     cursor: pointer;
     transition: background-color 0.3s linear;
 }
 
 .LinkNews:hover {
-    background-color: rgb(195, 79, 253);
+    /* background-color: rgb(195, 79, 253); */
     transition: background-color 0.1s linear;
+}
+
+
+.NewsCloser {
+    color: rgb(255, 255, 255);
+    background-color: rgb(255, 67, 67);
+    width: fit-content;
+    cursor: pointer;
+}
+
+#innerDialogNews {
+    height: 90vh;
+    overflow: scroll;
 }
 
 #keywords {
@@ -93,8 +107,8 @@ a {
     padding-right: 0.5rem;
     order: 1;
     width: 100%;
-    color: #505050;
-    background: rgba(240, 211, 255, 0.5);
+    color: rgb(255, 255, 255);
+    background: rgba(101, 152, 255, 0.5);
     text-align: right;
     position: fixed;
     height: 1.5rem;

@@ -1,12 +1,14 @@
 "use strict"
 
-const VERSION = '0.5.0';
+const VERSION = '0.6.0';
 
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
 let updButton = document.getElementById("updButton");
 let dialogNews = document.getElementById("dialogNews");
+let innerDialogNews = document.getElementById("innerDialogNews");
 let header = document.getElementById("header");
+let closeNewsWrapper = document.getElementById("closeNewsWrapper");
 
 header.textContent = `pulse v.${VERSION}`;
 
@@ -75,6 +77,7 @@ function randomInt(min, max) {
 
 function getKeywords(data) {
     let obj = {};
+    let maxCount = 0;
     for (let item in data) {
         let lowerCaseWords = data[item]['title'].toLowerCase();
         
@@ -94,7 +97,11 @@ function getKeywords(data) {
             'в', 'по', 'над', 'у', 'из', 'за', 'к', 'под',
             'о', 'на', 'для', 'об', 'с', 'не', 'что', 'при',
             'до', 'и', 'от', 'млн', 'почти', 'могут', 'свою',
-            'все', 'всё', 'год', 'году'
+            'все', 'всё', 'год', 'года', 'году', 'сообщил', 'сообщило', 
+            'два', 'двоих', 'будет', 'отношении', 'после', 'может', 'более',
+            'проект', 'список', 'три', 'вопрос', 'новых',
+            'между', 'трлн', 'въезд', 'вновь', 'призвал', 'назвал',
+            'против', 'фоне'
         ];
         let filteredArr = wordArr.filter(item => !conjuctions.includes(item));
 
@@ -102,29 +109,41 @@ function getKeywords(data) {
         filteredArr.forEach(i => {
             let link = data[item]['link'];
             let title = data[item]['title'];
+            let date = data[item]['date'];
             if (obj.hasOwnProperty(i)) {
                 obj[i]['count']++;
-                obj[i]['links'][link] = title;
+                obj[i]['links'][link] = {
+                    'title' : title,
+                    'date' : date
+                };
+                maxCount = (obj[i]['count'] > maxCount) ? obj[i]['count'] : maxCount;
             } else {
                 obj[i] = {
                     'count': 1,
                     'links': {
-                        [link]: title
+                        [link]: {
+                            'title' : title,
+                            'date' : date
+                        }
                     }
                 };
             }
         });
     }
-    return obj;
+    return [obj, maxCount];
 }
 
 function showNews(idLabel, words) {
-    let spanClose = document.createElement('span');
-    spanClose.textContent = 'Закрыть';
-    spanClose.style.backgroundColor = 'red';
-    dialogNews.innerHTML = '';
-    dialogNews.append(spanClose);
-    spanClose.addEventListener('click', () => {
+
+    
+    // let divClose = document.createElement('div');
+    closeNewsWrapper.textContent = 'Закрыть';
+    closeNewsWrapper.classList.add("NewsCloser");
+    // closeNewsWrapper.append(divClose);
+
+
+    innerDialogNews.innerHTML = '';
+    closeNewsWrapper.addEventListener('click', () => {
         dialogNews.close();
     });
 
@@ -135,15 +154,23 @@ function showNews(idLabel, words) {
     let word = decodeURIComponent(idLabel);
     
     let index = 1;
-    let colorA = 'rgb(240, 211, 255)';
-    let colorB = 'rgba(240, 211, 255, 0.1)';
+    let colorA = 'rgba(45, 115, 254, 0.3)';
+    let colorB = 'rgba(45, 115, 254, 0.05)';
 
     for (let item in words[word]['links']) {
         let divNews = document.createElement('div');
+        let spanTitle = document.createElement('span');
+        let spanDateSrc = document.createElement('span');
         let aNews = document.createElement('a');
-        divNews.append(aNews);
+        spanTitle.append(aNews);
         aNews.href = item;
-        aNews.textContent = words[word]['links'][item];
+        aNews.textContent = words[word]['links'][item]['title'];
+        
+        const currentDate = new Date(words[word]['links'][item]['date']);
+        let dateText = currentDate.toLocaleString('ru-RU');
+        let url = new URL(item);
+        spanDateSrc.textContent = ' '+ dateText + ', ' + url.hostname.replace(/^www\./, '');
+        spanDateSrc.classList.add("littleData");
 
         index++;
         if (index % 2 == 0) {
@@ -152,16 +179,32 @@ function showNews(idLabel, words) {
             divNews.style.backgroundColor = colorB;
         }
 
-        dialogNews.append(divNews);
+        divNews.append(spanTitle);
+        divNews.append(spanDateSrc);
+        innerDialogNews.append(divNews);
     }
 }
 
-function showKeywords(data) {
+function showKeywords(maindata) {
+    let [data, maxCount] = maindata;
+    let ratio = 1/maxCount;
+    const MAX_REM = 5;
+    const COUNT_SIZE_EDGE = 70;
     keywords.innerHTML = '';
     for (let item in data) {
         let spanWord = document.createElement('span');
+        let count = data[item]['count'];
         spanWord.textContent = item;
-        spanWord.style.fontSize = `${data[item]['count']*0.15}rem`;
+        spanWord.style.backgroundColor = `rgba(45, 115, 254, ${count*ratio})`;
+
+
+        if (count < COUNT_SIZE_EDGE) {
+            spanWord.style.fontSize = `${0.7 + count*0.1}rem`;
+        } else {
+            spanWord.style.fontSize = `${MAX_REM}rem`;
+        }
+
+        
         spanWord.id = encodeURIComponent(item);
         spanWord.classList.add("LinkNews");
         keywords.append(spanWord);
