@@ -1,6 +1,6 @@
 "use strict"
 
-const VERSION = '0.6.0';
+const VERSION = '0.6.1';
 
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
@@ -82,10 +82,11 @@ function getKeywords(data) {
         let lowerCaseWords = data[item]['title'].toLowerCase();
         
         // remove all special symbols
-        let filteredSymbols = lowerCaseWords.replace(/[^\p{Alpha}\p{M}\p{Nd}]+/giu, ' ');
+        let filteredSymbols = lowerCaseWords.replace(/[^\p{Alpha}\p{M}\p{Nd}\-]+/giu, ' ');
         
         // remove all digits
-        let filteredDigits = filteredSymbols.replace(/(\b|^)\d{1,2}(\b|$)/gi, ' ');
+        console.log(filteredSymbols)
+        let filteredDigits = filteredSymbols.replace(/(\s)\d+(\s)/gi, ' ');
         let filteredZeros = filteredDigits.replace(/(\b|^)000(\b|$)/gi, ' ');
 
         // remove all spaces
@@ -101,7 +102,7 @@ function getKeywords(data) {
             'два', 'двоих', 'будет', 'отношении', 'после', 'может', 'более',
             'проект', 'список', 'три', 'вопрос', 'новых',
             'между', 'трлн', 'въезд', 'вновь', 'призвал', 'назвал',
-            'против', 'фоне'
+            'против', 'фоне', 'нет'
         ];
         let filteredArr = wordArr.filter(item => !conjuctions.includes(item));
 
@@ -134,14 +135,6 @@ function getKeywords(data) {
 }
 
 function showNews(idLabel, words) {
-
-    
-    // let divClose = document.createElement('div');
-    closeNewsWrapper.textContent = 'Закрыть';
-    closeNewsWrapper.classList.add("NewsCloser");
-    // closeNewsWrapper.append(divClose);
-
-
     innerDialogNews.innerHTML = '';
     closeNewsWrapper.addEventListener('click', () => {
         dialogNews.close();
@@ -188,8 +181,7 @@ function showNews(idLabel, words) {
 function showKeywords(maindata) {
     let [data, maxCount] = maindata;
     let ratio = 1/maxCount;
-    const MAX_REM = 5;
-    const COUNT_SIZE_EDGE = 70;
+    const MAX_REM = 3;
     keywords.innerHTML = '';
     for (let item in data) {
         let spanWord = document.createElement('span');
@@ -197,13 +189,11 @@ function showKeywords(maindata) {
         spanWord.textContent = item;
         spanWord.style.backgroundColor = `rgba(45, 115, 254, ${count*ratio})`;
 
-
-        if (count < COUNT_SIZE_EDGE) {
-            spanWord.style.fontSize = `${0.7 + count*0.1}rem`;
+        if (count < (MAX_REM - 0.8)/0.05) {
+            spanWord.style.fontSize = `${0.8 + count*0.05}rem`;
         } else {
             spanWord.style.fontSize = `${MAX_REM}rem`;
         }
-
         
         spanWord.id = encodeURIComponent(item);
         spanWord.classList.add("LinkNews");

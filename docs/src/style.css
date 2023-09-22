@@ -64,27 +64,44 @@ a {
 }
 
 .LinkNews {
-    /* background-color: rgb(246, 227, 255); */
     cursor: pointer;
-    transition: background-color 0.3s linear;
+    padding: 0.3rem 1rem 0.5rem;
+    margin: 0.1rem 0.1rem;
+    /* border-radius: 1.5rem; */
 }
 
 .LinkNews:hover {
     /* background-color: rgb(195, 79, 253); */
-    transition: background-color 0.1s linear;
+    /* transition: background-color 0.1s linear; */
 }
 
 
-.NewsCloser {
+#dialogNews {
+    min-height: 2.5rem;
+}
+
+#closeNewsWrapper {
+    position: absolute;
+    right: 0;
+    width: 5rem;
+}
+
+#NewsCloser {
     color: rgb(255, 255, 255);
-    background-color: rgb(255, 67, 67);
-    width: fit-content;
+    background-color: rgba(255, 0, 0, 0.5);
     cursor: pointer;
+
+    display: flex;
+    position: fixed;
+    width: 5rem;
+    height: 2.5rem;
+
+    justify-content: center;
+    align-items: center;
 }
 
 #innerDialogNews {
-    height: 90vh;
-    overflow: scroll;
+    padding: 0.5rem;
 }
 
 #keywords {
