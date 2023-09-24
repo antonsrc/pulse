@@ -1,6 +1,6 @@
 "use strict"
 
-const VERSION = '0.6.1';
+const VERSION = '0.6.2';
 
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
@@ -81,30 +81,29 @@ function getKeywords(data) {
     for (let item in data) {
         let lowerCaseWords = data[item]['title'].toLowerCase();
         
-        // remove all special symbols
-        let filteredSymbols = lowerCaseWords.replace(/[^\p{Alpha}\p{M}\p{Nd}\-]+/giu, ' ');
+        // save only words, digits and dash
+        let filteredSymbols = lowerCaseWords.replace(/[^\p{Alpha}\p{Nd}\-]+/giu, ' ');
         
         // remove all digits
-        console.log(filteredSymbols)
-        let filteredDigits = filteredSymbols.replace(/(\s)\d+(\s)/gi, ' ');
-        let filteredZeros = filteredDigits.replace(/(\b|^)000(\b|$)/gi, ' ');
+        let filteredDigits = filteredSymbols.replace(/(\s|^)\d+(|\s)/giu, ' ');
+        filteredDigits = filteredDigits.replace(/\s-\d+/giu, ' ');
 
         // remove all spaces
-        let filteredSpaces = filteredZeros.replace(/\s+/g, ' ').trim();
+        let filteredSpaces = filteredDigits.replace(/\s+/g, ' ').trim();
         let wordArr = filteredSpaces.split(' ');
 
-        // remove all conjunctions and prepositions
-        let conjuctions = [
+        let exceptionWords = [
             'в', 'по', 'над', 'у', 'из', 'за', 'к', 'под',
             'о', 'на', 'для', 'об', 'с', 'не', 'что', 'при',
             'до', 'и', 'от', 'млн', 'почти', 'могут', 'свою',
-            'все', 'всё', 'год', 'года', 'году', 'сообщил', 'сообщило', 
-            'два', 'двоих', 'будет', 'отношении', 'после', 'может', 'более',
-            'проект', 'список', 'три', 'вопрос', 'новых',
-            'между', 'трлн', 'въезд', 'вновь', 'призвал', 'назвал',
-            'против', 'фоне', 'нет'
+            'все', 'всё', 'сообщил', 'сообщило', 'будет', 'отношении', 
+            'после', 'может', 'более', 'между', 'трлн', 'въезд', 'вновь',
+            'призвал', 'назвал', 'против', 'нет', 'из-за', '-м', '-х',
+            '-й', 'самый', 'избран', 'среди', 'моя',
+            'стал', 'создали', 'выросло', 'оформлении','решить'
         ];
-        let filteredArr = wordArr.filter(item => !conjuctions.includes(item));
+
+        let filteredArr = wordArr.filter(item => !exceptionWords.includes(item));
 
         
         filteredArr.forEach(i => {
