@@ -75,7 +75,6 @@ a {
     /* transition: background-color 0.1s linear; */
 }
 
-
 #dialogNews {
     min-height: 2.5rem;
 }
@@ -83,17 +82,20 @@ a {
 #closeNewsWrapper {
     position: absolute;
     right: 0;
-    width: 5rem;
+    width: 2.5rem;
 }
 
 #NewsCloser {
     color: rgb(255, 255, 255);
-    background-color: rgba(255, 0, 0, 0.5);
+    background-color: rgb(255, 74, 74);
     cursor: pointer;
+
+    font-size: 2rem;
+    padding: 0rem 1rem 0.5rem;
 
     display: flex;
     position: fixed;
-    width: 5rem;
+    width: 2.5rem;
     height: 2.5rem;
 
     justify-content: center;
@@ -109,7 +111,7 @@ a {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
-    padding-top: 1.5rem;
+    padding-top: 1.7rem;
 }
 
 #container {

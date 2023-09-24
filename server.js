@@ -28,14 +28,36 @@ const createQuery = `CREATE TABLE
 let xmlSrc = 'https://www.vedomosti.ru/rss/news.xml';
 
 app.use(express.static('docs'));
-app.get('/ajax', (req, res) => {
-	fetch(xmlSrc)
-    .then(xml => xml.text())
-    .then(xmlText => xml2js.parseStringPromise(xmlText))
-    .then(json => extractToObjWithKeys(json))
-    .then(obj => loadToDB(obj))
-    .then(() => selectQueryToDB())
+
+app.use((request, response, next) => {
+    const interval = setInterval(() => {
+        
+        // console.log("Middleware", new Date());
+
+        fetch(xmlSrc)
+        .then(xml => xml.text())
+        .then(xmlText => xml2js.parseStringPromise(xmlText))
+        .then(json => extractToObjWithKeys(json))
+        .then(obj => loadToDB(obj));
+
+      }, 300000);
+      
     
+    next();
+});
+
+app.get('/ajax', (req, res) => {
+	// fetch(xmlSrc)
+    // .then(xml => xml.text())
+    // .then(xmlText => xml2js.parseStringPromise(xmlText))
+    // .then(json => extractToObjWithKeys(json))
+    // .then(obj => loadToDB(obj))
+    // .then(() => selectQueryToDB())
+
+    let promise = new Promise((resolve, reject) => {
+        resolve(selectQueryToDB());
+    })
+
     .then(newObj => JSON.stringify(newObj))
     .then(json => res.json(json));
 });
