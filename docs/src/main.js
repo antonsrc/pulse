@@ -9,6 +9,7 @@ let dialogNews = document.getElementById("dialogNews");
 let innerDialogNews = document.getElementById("innerDialogNews");
 let header = document.getElementById("header");
 let closeNewsWrapper = document.getElementById("closeNewsWrapper");
+let NewsHeaderInn = document.getElementById("NewsHeaderInn");
 
 header.textContent = `pulse v.${VERSION}`;
 
@@ -146,6 +147,8 @@ function showNews(idLabel, words) {
 
     let word = decodeURIComponent(idLabel);
     
+    NewsHeaderInn.innerHTML = `${word} (${Object.keys(words[word]['links']).length}) `;
+
     let index = 1;
     let colorA = 'rgba(45, 115, 254, 0.3)';
     let colorB = 'rgba(45, 115, 254, 0.05)';
