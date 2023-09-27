@@ -1,6 +1,6 @@
 "use strict"
 
-const VERSION = '0.6.2';
+const VERSION = '0.7.3';
 
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
@@ -16,6 +16,8 @@ header.textContent = `pulse v.${VERSION}`;
 window.addEventListener('DOMContentLoaded', () => {
     getNews();
 });
+
+dialogNews.addEventListener('close', () => document.body.classList.remove("Scroll-lock"));
 
 // updButton.addEventListener('click', () => {
 //     getNews();
@@ -143,6 +145,7 @@ function showNews(idLabel, words) {
 
     dialogNews.inert = true;
     dialogNews.showModal();
+    document.body.classList.add("Scroll-lock");
     dialogNews.inert = false;
 
     let word = decodeURIComponent(idLabel);
@@ -184,7 +187,7 @@ function showNews(idLabel, words) {
 function showKeywords(maindata) {
     let [data, maxCount] = maindata;
     let ratio = 1/maxCount;
-    const MAX_REM = 3;
+    // const MAX_REM = 3;
     keywords.innerHTML = '';
     for (let item in data) {
         let spanWord = document.createElement('span');
@@ -192,11 +195,11 @@ function showKeywords(maindata) {
         spanWord.textContent = item;
         spanWord.style.backgroundColor = `rgba(45, 115, 254, ${count*ratio})`;
 
-        if (count < (MAX_REM - 0.8)/0.05) {
-            spanWord.style.fontSize = `${0.8 + count*0.05}rem`;
-        } else {
-            spanWord.style.fontSize = `${MAX_REM}rem`;
-        }
+        // if (count < (MAX_REM - 0.8)/0.05) {
+        //     spanWord.style.fontSize = `${0.8 + count*0.05}rem`;
+        // } else {
+        //     spanWord.style.fontSize = `${MAX_REM}rem`;
+        // }
         
         spanWord.id = encodeURIComponent(item);
         spanWord.classList.add("LinkNews");

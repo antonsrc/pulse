@@ -65,7 +65,7 @@ a {
 
 .LinkNews {
     cursor: pointer;
-    padding: 0.3rem 1rem 0.5rem;
+    padding: 0.3rem 0.7rem 0.5rem;
     margin: 0.1rem 0.1rem;
     /* border-radius: 1.5rem; */
 }
@@ -165,4 +165,8 @@ a {
 
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
+}
+
+.Scroll-lock {
+    overflow: hidden;
 }
