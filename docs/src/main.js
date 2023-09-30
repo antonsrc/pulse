@@ -1,6 +1,6 @@
 "use strict"
 
-const VERSION = '0.7.3';
+const VERSION = '0.7.4';
 
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
@@ -104,7 +104,7 @@ function getKeywords(data) {
             'призвал', 'назвал', 'против', 'нет', 'из-за', '-м', '-х',
             '-й', 'самый', 'избран', 'среди', 'моя', 'задержали',
             'стал', 'создали', 'выросло', 'оформлении','решить',
-            'самом', 'похитили', 'частного', 'неизвестные'
+            'самом', 'похитили', 'частного', 'неизвестные', 'без', 'co'
         ];
 
         let filteredArr = wordArr.filter(item => !exceptionWords.includes(item));
@@ -189,21 +189,25 @@ function showKeywords(maindata) {
     let ratio = 1/maxCount;
     // const MAX_REM = 3;
     keywords.innerHTML = '';
+
     for (let item in data) {
         let spanWord = document.createElement('span');
         let count = data[item]['count'];
-        spanWord.textContent = item;
-        spanWord.style.backgroundColor = `rgba(45, 115, 254, ${count*ratio})`;
+        if (count > 3) {
+            spanWord.textContent = item;
+            spanWord.style.backgroundColor = `rgba(45, 115, 254, ${count*ratio})`;
+    
+            // if (count < (MAX_REM - 0.8)/0.05) {
+            //     spanWord.style.fontSize = `${0.8 + count*0.05}rem`;
+            // } else {
+            //     spanWord.style.fontSize = `${MAX_REM}rem`;
+            // }
+            
+            spanWord.id = encodeURIComponent(item);
+            spanWord.classList.add("LinkNews");
+            keywords.append(spanWord);
+        }
 
-        // if (count < (MAX_REM - 0.8)/0.05) {
-        //     spanWord.style.fontSize = `${0.8 + count*0.05}rem`;
-        // } else {
-        //     spanWord.style.fontSize = `${MAX_REM}rem`;
-        // }
-        
-        spanWord.id = encodeURIComponent(item);
-        spanWord.classList.add("LinkNews");
-        keywords.append(spanWord);
     }
     return data;
 }

@@ -37,6 +37,11 @@ const createQuery2 = `CREATE TABLE
 let xmlSrc = 'https://www.vedomosti.ru/rss/news.xml';
 let xmlSrc2 = 'https://www.rg.ru/xml/index.xml';
 
+let srcList = [
+    'https://www.vedomosti.ru/rss/news.xml',
+    'https://www.rg.ru/xml/index.xml'
+];
+
 app.use(express.static('docs'));
 
 app.use((request, response, next) => {
@@ -44,7 +49,18 @@ app.use((request, response, next) => {
     connection.query(createQuery);
     connection.query(createQuery2);
 
+
+    
+
+
+    let index = 0;
     const interval = setInterval(() => {
+
+        if (index >= srcList.length) {
+            index = 0;
+        }
+
+        // fetch(srcList[index])
         fetch(xmlSrc)
         // .then(() => {throw new Error("Ошибка!");})
         .then(xml => xml.text())
@@ -54,18 +70,22 @@ app.use((request, response, next) => {
         .catch(err => {
             fs.appendFileSync("./errors/vedomosti.txt", `\n${new Date()} ${Date.now()} ${err}`);
         });
-    }, 10000);
+        index++;
+    }, 300000);
       
     const interval2 = setInterval(() => { // !
         fetch(xmlSrc2) // !
         .then(xml => xml.text())
         .then(xmlText => xml2js.parseStringPromise(xmlText))
         .then(json => extractToObjWithKeys(json))
+
+
+
         .then(obj => loadToDB2(obj)) // !
         .catch(err => {
-            fs.appendFileSync("./errors/rg.txt", `\n${new Date()} ${Date.now()} ${err}`);
+            fs.appendFileSync("./errors/rg.txt", `\n${new Date()} ${Date.now()} ${err}`); //!
         });
-    }, 10000);
+    }, 300000);
 
 
 
