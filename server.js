@@ -16,90 +16,80 @@ const DB_SETTINGS = {
     user: "f0695925_pulse",
     password: jsonFile['passNet']
 };
-const createQuery = `CREATE TABLE 
-    IF NOT EXISTS vedomosti_ru_rss_news (
-        id_event INT NOT NULL AUTO_INCREMENT,
-        date TIMESTAMP(6) NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        link VARCHAR(255) NOT NULL,
-        PRIMARY KEY (id_event)
-    ) ENGINE=InnoDB CHARSET=utf8;`;
-
-const createQuery2 = `CREATE TABLE 
-    IF NOT EXISTS rg_ru_xml_index (
-        id_event INT NOT NULL AUTO_INCREMENT,
-        date TIMESTAMP(6) NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        link VARCHAR(255) NOT NULL,
-        PRIMARY KEY (id_event)
-    ) ENGINE=InnoDB CHARSET=utf8;`;
-
-let xmlSrc = 'https://www.vedomosti.ru/rss/news.xml';
-let xmlSrc2 = 'https://www.rg.ru/xml/index.xml';
-
-let srcList = [
-    'https://www.vedomosti.ru/rss/news.xml',
-    'https://www.rg.ru/xml/index.xml'
+const SRC_LIST = [
+    {
+        url: 'https://www.vedomosti.ru/rss/news.xml',
+        dbname: 'vedomosti_ru_rss_news',
+        errorsDir: './errors/vedomosti.txt'
+    },
+    {
+        url: 'https://www.rg.ru/xml/index.xml',
+        dbname: 'rg_ru_xml_index',
+        errorsDir: './errors/rg.txt'
+    },
+    {
+        url: 'https://tass.ru/rss/v2.xml',
+        dbname: 'tass_ru_rss_v2',
+        errorsDir: './errors/tass.txt'
+    },
+    {
+        url: 'https://tvzvezda.ru/export/rss.xml',
+        dbname: 'tvzvezda_ru_export_rss',
+        errorsDir: './errors/tvzvezda.txt'
+    },
+    {
+        url: 'https://russian.rt.com/rss',
+        dbname: 'russian_rt_com_rss',
+        errorsDir: './errors/rt.txt'
+    },
+    {
+        url: 'https://www.cnews.ru/inc/rss/news.xml',
+        dbname: 'cnews_ru_inc_rss_news',
+        errorsDir: './errors/cnews.txt'
+    },
+    {
+        url: 'https://3dnews.ru/news/rss/',
+        dbname: '3dnews_ru_news_rss',
+        errorsDir: './errors/3dnews.txt'
+    }
 ];
 
 app.use(express.static('docs'));
 
 app.use((request, response, next) => {
-    const connection = mysql.createConnection(DB_SETTINGS).promise();
-    connection.query(createQuery);
-    connection.query(createQuery2);
-
-
     
-
+    SRC_LIST.forEach(item => {
+        const connection = mysql.createConnection(DB_SETTINGS).promise();
+        connection.query(createQuery(item['dbname']))
+        .finally(() => connection.end());
+    });
 
     let index = 0;
     const interval = setInterval(() => {
-
-        if (index >= srcList.length) {
+        if (index >= SRC_LIST.length) {
             index = 0;
         }
 
-        // fetch(srcList[index])
-        fetch(xmlSrc)
-        // .then(() => {throw new Error("Ошибка!");})
+        fetch(SRC_LIST[index]['url'], {
+            headers: {"Content-Type": "text/xml; charset=UTF-8"}
+        })
         .then(xml => xml.text())
         .then(xmlText => xml2js.parseStringPromise(xmlText))
         .then(json => extractToObjWithKeys(json))
-        .then(obj => loadToDB(obj))
+        .then(obj => loadToDB(obj, SRC_LIST[index]['dbname']))
         .catch(err => {
-            fs.appendFileSync("./errors/vedomosti.txt", `\n${new Date()} ${Date.now()} ${err}`);
+            fs.appendFileSync(SRC_LIST[index]['errorsDir'], `\n${new Date()} ${Date.now()} ${err}`);
+        })
+        .finally(() => {
+            fs.appendFileSync('./errors/check.txt', `\n${new Date()} ${Date.now()} ${SRC_LIST[index]['dbname']}`);
+            index++;
         });
-        index++;
-    }, 300000);
-      
-    const interval2 = setInterval(() => { // !
-        fetch(xmlSrc2) // !
-        .then(xml => xml.text())
-        .then(xmlText => xml2js.parseStringPromise(xmlText))
-        .then(json => extractToObjWithKeys(json))
-
-
-
-        .then(obj => loadToDB2(obj)) // !
-        .catch(err => {
-            fs.appendFileSync("./errors/rg.txt", `\n${new Date()} ${Date.now()} ${err}`); //!
-        });
-    }, 300000);
-
-
+    }, 60000);
 
     next();
 });
 
 app.get('/ajax', (req, res) => {
-	// fetch(xmlSrc)
-    // .then(xml => xml.text())
-    // .then(xmlText => xml2js.parseStringPromise(xmlText))
-    // .then(json => extractToObjWithKeys(json))
-    // .then(obj => loadToDB(obj))
-    // .then(() => selectQueryToDB())
-
     let promise = new Promise((resolve, reject) => {
         resolve(selectQueryToDB());
     })
@@ -124,38 +114,20 @@ function extractToObjWithKeys(json) {
     return obj;
 }
 
-function loadToDB(obj) {
+function loadToDB(obj, dbname) {
     const connection = mysql.createConnection(DB_SETTINGS).promise();
-    connection.query(createQuery);
-    return connection.query(`SELECT Max (date) FROM vedomosti_ru_rss_news LIMIT 1`)
+    // connection.query(createQuery(dbname));
+    return connection.query(`SELECT Max (date) FROM ${dbname} LIMIT 1`)
     .then(res => res[0][0]['Max (date)'])
-    .then(maxDate => queryInsertData(maxDate, obj, connection))
+    .then(maxDate => queryInsertData(maxDate, obj, connection, dbname))
     .finally(() => connection.end());
 }
 
-function loadToDB2(obj) { // !
-    const connection = mysql.createConnection(DB_SETTINGS).promise();
-    connection.query(createQuery2);
-    return connection.query(`SELECT Max (date) FROM rg_ru_xml_index LIMIT 1`) // !
-    .then(res => res[0][0]['Max (date)'])
-    .then(maxDate => queryInsertData2(maxDate, obj, connection))
-    .finally(() => connection.end());
-}
-
-function queryInsertData(maxDate, obj, connection) {
+function queryInsertData(maxDate, obj, connection, dbname) {
     const maximumDate = (maxDate == null) ? new Date(0) : maxDate;
-    const insertQuery = 'INSERT INTO vedomosti_ru_rss_news(date, title, link) VALUES(?, ?, ?)';
+    const insertQuery = `INSERT INTO ${dbname}(date, title, link) VALUES(?, ?, ?)`;
     let filteredDates = Object.keys(obj).filter(item => new Date(Number(item)) > maximumDate);
-    filteredDates.forEach(i => {
-        let values = [new Date(obj[i]['date']), obj[i]['title'], obj[i]['link']];
-        connection.query(insertQuery, values);
-    });
-}
 
-function queryInsertData2(maxDate, obj, connection) { // !
-    const maximumDate = (maxDate == null) ? new Date(0) : maxDate;
-    const insertQuery = 'INSERT INTO rg_ru_xml_index(date, title, link) VALUES(?, ?, ?)'; // !
-    let filteredDates = Object.keys(obj).filter(item => new Date(Number(item)) > maximumDate);
     filteredDates.forEach(i => {
         let values = [new Date(obj[i]['date']), obj[i]['title'], obj[i]['link']];
         connection.query(insertQuery, values);
@@ -164,8 +136,14 @@ function queryInsertData2(maxDate, obj, connection) { // !
 
 function selectQueryToDB() {
     const connection = mysql.createConnection(DB_SETTINGS).promise();
-    // return connection.query(`SELECT * FROM vedomosti_ru_rss_news ORDER BY date DESC`)
-    return connection.query(`SELECT * FROM vedomosti_ru_rss_news UNION ALL SELECT * FROM rg_ru_xml_index ORDER BY date DESC`)
+
+    let [firstArr, ...restArr] = SRC_LIST;
+    let qAll = restArr.reduce((concat, current) => {
+        return concat + ` UNION ALL SELECT * FROM ${current['dbname']} `;
+    }, `SELECT * FROM ${firstArr['dbname']} `);
+    let queryAllDB = qAll + ' ORDER BY date DESC';
+
+    return connection.query(queryAllDB)
     .then(res => {
         let filteredRes = {};
         res[0].forEach(i => {
@@ -180,4 +158,15 @@ function selectQueryToDB() {
         return filteredRes;
     })
     .finally(() => connection.end());
+}
+
+function createQuery(dbname) {
+    return `CREATE TABLE 
+        IF NOT EXISTS ${dbname} (
+            id_event INT NOT NULL AUTO_INCREMENT,
+            date TIMESTAMP(6) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            link VARCHAR(255) NOT NULL,
+            PRIMARY KEY (id_event)
+        ) ENGINE=InnoDB CHARSET=utf8;`;
 }
