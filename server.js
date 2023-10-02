@@ -159,8 +159,8 @@ function selectQueryToDB() {
     // let queryAllDB = qAll + ' ORDER BY date DESC';
 
     let qAll = restArr.reduce((concat, current) => {
-        return concat + ` UNION ALL (SELECT * FROM ${current['dbname']} WHERE date > DATE_SUB(curdate(), INTERVAL 1 DAY)) `;
-    }, `(SELECT * FROM ${firstArr['dbname']} WHERE date > DATE_SUB(curdate(), INTERVAL 1 DAY))`);
+        return concat + ` UNION ALL (SELECT * FROM ${current['dbname']} WHERE date > DATE_SUB(now(), INTERVAL 1 DAY)) `;
+    }, `(SELECT * FROM ${firstArr['dbname']} WHERE date > DATE_SUB(now(), INTERVAL 1 DAY))`);
     let queryAllDB = qAll + ` ORDER BY date DESC`;
 
     return connection.query(queryAllDB)

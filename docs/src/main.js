@@ -1,6 +1,6 @@
 "use strict"
 
-const VERSION = '0.8.5';
+const VERSION = '0.8.6';
 
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
@@ -105,7 +105,8 @@ function getKeywords(data) {
             '-й', 'самый', 'избран', 'среди', 'моя', 'задержали',
             'стал', 'создали', 'выросло', 'оформлении','решить',
             'самом', 'похитили', 'частного', 'неизвестные', 'без', 'со',
-            'как', 'его', 'во', 'ли', 'ее', 'перед', 'тысяч', 'всей'
+            'как', 'его', 'во', 'ли', 'ее', 'перед', 'тысяч', 'всей', 'я',
+            'тыс'
         ];
 
         let filteredArr = wordArr.filter(item => !exceptionWords.includes(item));
@@ -194,7 +195,7 @@ function showKeywords(maindata) {
     for (let item in data) {
         let spanWord = document.createElement('span');
         let count = data[item]['count'];
-        if (count > 2) {
+        if (count > 3) {
             spanWord.textContent = item;
             spanWord.style.backgroundColor = `rgba(45, 115, 254, ${count*ratio})`;
     
