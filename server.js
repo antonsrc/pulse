@@ -51,7 +51,22 @@ const SRC_LIST = [
         url: 'https://3dnews.ru/news/rss/',
         dbname: '3dnews_ru_news_rss',
         errorsDir: './errors/3dnews.txt'
-    }
+    },
+    {
+        url: 'https://www.ixbt.com/export/news.rss',
+        dbname: 'ixbt_com_export_news',
+        errorsDir: './errors/ixbt.txt'
+    },
+    {
+        url: 'https://habr.com/ru/rss/news/?fl=ru',
+        dbname: 'habr_com_ru_rss_news',
+        errorsDir: './errors/habr.txt'
+    },
+    {
+        url: 'https://ria.ru/export/rss2/archive/index.xml',
+        dbname: 'ria_ru_export_rss2_archive_index',
+        errorsDir: './errors/ria.txt'
+    } 
 ];
 
 app.use(express.static('docs'));
@@ -138,10 +153,15 @@ function selectQueryToDB() {
     const connection = mysql.createConnection(DB_SETTINGS).promise();
 
     let [firstArr, ...restArr] = SRC_LIST;
+    // let qAll = restArr.reduce((concat, current) => {
+    //     return concat + ` UNION ALL SELECT * FROM ${current['dbname']} `;
+    // }, `SELECT * FROM ${firstArr['dbname']} `);
+    // let queryAllDB = qAll + ' ORDER BY date DESC';
+
     let qAll = restArr.reduce((concat, current) => {
-        return concat + ` UNION ALL SELECT * FROM ${current['dbname']} `;
-    }, `SELECT * FROM ${firstArr['dbname']} `);
-    let queryAllDB = qAll + ' ORDER BY date DESC';
+        return concat + ` UNION ALL (SELECT * FROM ${current['dbname']} WHERE date > DATE_SUB(curdate(), INTERVAL 1 DAY)) `;
+    }, `(SELECT * FROM ${firstArr['dbname']} WHERE date > DATE_SUB(curdate(), INTERVAL 1 DAY))`);
+    let queryAllDB = qAll + ` ORDER BY date DESC`;
 
     return connection.query(queryAllDB)
     .then(res => {
