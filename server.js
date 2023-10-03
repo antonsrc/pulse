@@ -72,35 +72,34 @@ const SRC_LIST = [
 app.use(express.static('docs'));
 
 app.use((request, response, next) => {
-    
     SRC_LIST.forEach(item => {
         const connection = mysql.createConnection(DB_SETTINGS).promise();
-        connection.query(createQuery(item['dbname']))
+        connection.query(createDB(item['dbname']))
         .finally(() => connection.end());
     });
 
-    let index = 0;
     const interval = setInterval(() => {
-        if (index >= SRC_LIST.length) {
-            index = 0;
-        }
-
-        fetch(SRC_LIST[index]['url'], {
-            headers: {"Content-Type": "text/xml; charset=UTF-8"}
-        })
-        .then(xml => xml.text())
-        .then(xmlText => xml2js.parseStringPromise(xmlText))
-        .then(json => extractToObjWithKeys(json))
-        .then(obj => loadToDB(obj, SRC_LIST[index]['dbname']))
-        .catch(err => {
-            fs.appendFileSync(SRC_LIST[index]['errorsDir'], `\n${new Date()} ${Date.now()} ${err}`);
-        })
-        .finally(() => {
-            fs.appendFileSync('./errors/check.txt', `\n${new Date()} ${Date.now()} ${SRC_LIST[index]['dbname']}`);
-            index++;
-        });
-    }, 60000);
-
+        Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
+                headers: {"Content-Type": "text/xml; charset=UTF-8"}
+            })
+            .then(xml => xml.text())
+            .then(xmlText => xml2js.parseStringPromise(xmlText))
+            .then(json => extractToObjWithKeys(json))
+        ))
+            .then(res => {
+                res.forEach((result, num) => {
+                    if (result.status == "fulfilled") {
+                        // console.log(`${SRC_LIST[num]['url']}: ${result.value}`);
+                        loadToDB(result.value, SRC_LIST[num]['dbname']);
+                        fs.appendFileSync('./errors/check.txt', `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
+                    }
+                    if (result.status == "rejected") {
+                        // console.log(`${SRC_LIST[num]['url']}: ${result.reason}`);
+                        fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
+                    }
+                });
+            });
+    }, 300000);
     next();
 });
 
@@ -108,10 +107,10 @@ app.get('/ajax', (req, res) => {
     let promise = new Promise((resolve, reject) => {
         resolve(selectQueryToDB());
     })
-
     .then(newObj => JSON.stringify(newObj))
     .then(json => res.json(json));
 });
+
 app.listen(PORT);
 
 function extractToObjWithKeys(json) {
@@ -131,7 +130,6 @@ function extractToObjWithKeys(json) {
 
 function loadToDB(obj, dbname) {
     const connection = mysql.createConnection(DB_SETTINGS).promise();
-    // connection.query(createQuery(dbname));
     return connection.query(`SELECT Max (date) FROM ${dbname} LIMIT 1`)
     .then(res => res[0][0]['Max (date)'])
     .then(maxDate => queryInsertData(maxDate, obj, connection, dbname))
@@ -180,7 +178,7 @@ function selectQueryToDB() {
     .finally(() => connection.end());
 }
 
-function createQuery(dbname) {
+function createDB(dbname) {
     return `CREATE TABLE 
         IF NOT EXISTS ${dbname} (
             id_event INT NOT NULL AUTO_INCREMENT,
