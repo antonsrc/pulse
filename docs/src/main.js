@@ -91,8 +91,11 @@ function getKeywords(data) {
         let filteredDigits = filteredSymbols.replace(/(\s|^)\d+(|\s)/giu, ' ');
         filteredDigits = filteredDigits.replace(/\s-\d+/giu, ' ');
 
+        // remove all singles chars
+        let filteredSingles = filteredDigits.replace(/(\s|^).($|\s)/gi, ' ');
+
         // remove all spaces
-        let filteredSpaces = filteredDigits.replace(/\s+/g, ' ').trim();
+        let filteredSpaces = filteredSingles.replace(/\s+/g, ' ').trim();
         let wordArr = filteredSpaces.split(' ');
 
         let exceptionWords = [
@@ -106,7 +109,7 @@ function getKeywords(data) {
             'стал', 'создали', 'выросло', 'оформлении','решить',
             'самом', 'похитили', 'частного', 'неизвестные', 'без', 'со',
             'как', 'его', 'во', 'ли', 'ее', 'перед', 'тысяч', 'всей', 'я',
-            'тыс', 'или'
+            'тыс', 'или', 'уже', 'км'
         ];
 
         let filteredArr = wordArr.filter(item => !exceptionWords.includes(item));

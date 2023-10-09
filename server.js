@@ -99,7 +99,7 @@ app.use((request, response, next) => {
                     }
                 });
             });
-    }, 300000);
+    }, 600000);
     next();
 });
 
