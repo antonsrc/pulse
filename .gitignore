@@ -3,3 +3,6 @@ secret.json
 temp/
 node_modules/
 errors/
+build/**/*.js
+src/secret.json
+.htaccess

@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "ES2016",
+        "removeComments": true,
+        "outDir": "build",
+        "rootDir": "src",
+        "noEmitOnError": true,
+        // "noImplicitAny": true,
+        // "strictNullChecks": true
+    }
+}

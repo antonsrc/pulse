@@ -5,7 +5,7 @@ const VERSION = '0.8.6';
 let container = document.getElementById("container");
 let keywords = document.getElementById("keywords");
 let updButton = document.getElementById("updButton");
-let dialogNews = document.getElementById("dialogNews");
+let dialogNews: any = document.getElementById("dialogNews");
 let innerDialogNews = document.getElementById("innerDialogNews");
 let header = document.getElementById("header");
 let closeNewsWrapper = document.getElementById("closeNewsWrapper");
@@ -36,7 +36,7 @@ function getNews() {
 function showNewsMain(data) {
     container.innerHTML = '';
     let index = 1;
-    let nowDay = new Date();
+    let nowDay: any = new Date();
     let colorA = 'rgb(254, 245, 232)';
     let colorB = 'rgba(254, 245, 232, 0.7)';
 
@@ -142,7 +142,7 @@ function getKeywords(data) {
     return [obj, maxCount];
 }
 
-function showNews(idLabel, words) {
+function showNews(idLabel: any, words) {
     innerDialogNews.innerHTML = '';
     closeNewsWrapper.addEventListener('click', () => {
         dialogNews.close();
@@ -219,8 +219,9 @@ function showKeywords(maindata) {
 
 function setEventListenersForLabels(words) {
     keywords.addEventListener('click', e => {
-        if (e.target.className == 'LinkNews') {
-            showNews(e.target.id, words);
+        const target = e.target as HTMLInputElement;
+        if (target.className == 'LinkNews') {
+            showNews(target.id, words);
         }
     });
 }

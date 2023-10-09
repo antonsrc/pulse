@@ -4,5 +4,9 @@
     "mysql2": "^3.1.2",
     "node-fetch": "^2.7.0",
     "xml2js": "^0.6.2"
+  },
+  "scripts": {
+    "build": "tsc -w",
+    "start": "node build/server.js"
   }
 }
