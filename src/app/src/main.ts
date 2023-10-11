@@ -1,15 +1,13 @@
-"use strict"
+const VERSION: string = '0.9.6';
 
-const VERSION = '0.8.6';
-
-let container = document.getElementById("container");
-let keywords = document.getElementById("keywords");
-let updButton = document.getElementById("updButton");
-let dialogNews: any = document.getElementById("dialogNews");
-let innerDialogNews = document.getElementById("innerDialogNews");
-let header = document.getElementById("header");
-let closeNewsWrapper = document.getElementById("closeNewsWrapper");
-let NewsHeaderInn = document.getElementById("NewsHeaderInn");
+const container: HTMLElement = document.getElementById("container");
+const keywords: HTMLElement = document.getElementById("keywords");
+const updButton: HTMLElement = document.getElementById("updButton");
+const dialogNews = document.getElementById("dialogNews") as HTMLDialogElement;
+const innerDialogNews: HTMLElement = document.getElementById("innerDialogNews");
+const header: HTMLElement = document.getElementById("header");
+const closeNewsWrapper: HTMLElement = document.getElementById("closeNewsWrapper");
+const NewsHeaderInn: HTMLElement = document.getElementById("NewsHeaderInn");
 
 header.textContent = `pulse v.${VERSION}`;
 
@@ -17,20 +15,17 @@ window.addEventListener('DOMContentLoaded', () => {
     getNews();
 });
 
-dialogNews.addEventListener('close', () => document.body.classList.remove("Scroll-lock"));
+dialogNews.addEventListener('close', () => {
+    document.body.classList.remove("Scroll-lock");
+});
 
-// updButton.addEventListener('click', () => {
-//     getNews();
-// });
-
-function getNews() {
-    let importedData = fetch("/ajax")
-    .then(res => res.json())
-    .then(data => JSON.parse(data))
-    // importedData.then(json => showNews(json));
-    .then(json => getKeywords(json))
-    .then(words => showKeywords(words))
-    .then(words => setEventListenersForLabels(words));
+function getNews(): void {
+    fetch("/ajax")
+        .then(res => res.json())
+        .then(data => JSON.parse(data))
+        .then(json => getKeywords(json))
+        .then(words => showKeywords(words))
+        .then(words => setEventListenersForLabels(words));
 }
 
 function showNewsMain(data) {

@@ -5,7 +5,11 @@
         "outDir": "build",
         "rootDir": "src",
         "noEmitOnError": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        
         // "noImplicitAny": true,
-        // "strictNullChecks": true
+        // "strictNullChecks": true,
+        // "strictPropertyInitialization": true
     }
 }
