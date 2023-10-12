@@ -1,13 +1,13 @@
 const VERSION: string = '0.9.6';
 
-const container: HTMLElement = document.getElementById("container");
-const keywords: HTMLElement = document.getElementById("keywords");
-const updButton: HTMLElement = document.getElementById("updButton");
 const dialogNews = document.getElementById("dialogNews") as HTMLDialogElement;
-const innerDialogNews: HTMLElement = document.getElementById("innerDialogNews");
-const header: HTMLElement = document.getElementById("header");
-const closeNewsWrapper: HTMLElement = document.getElementById("closeNewsWrapper");
-const NewsHeaderInn: HTMLElement = document.getElementById("NewsHeaderInn");
+const container: HTMLElement = document.getElementById("container")!;
+const keywords: HTMLElement = document.getElementById("keywords")!;
+const updButton: HTMLElement = document.getElementById("updButton")!;
+const innerDialogNews: HTMLElement = document.getElementById("innerDialogNews")!;
+const header: HTMLElement = document.getElementById("header")!;
+const closeNewsWrapper: HTMLElement = document.getElementById("closeNewsWrapper")!;
+const NewsHeaderInn: HTMLElement = document.getElementById("NewsHeaderInn")!;
 
 header.textContent = `pulse v.${VERSION}`;
 
@@ -19,6 +19,8 @@ dialogNews.addEventListener('close', () => {
     document.body.classList.remove("Scroll-lock");
 });
 
+
+
 function getNews(): void {
     fetch("/ajax")
         .then(res => res.json())
@@ -28,49 +30,13 @@ function getNews(): void {
         .then(words => setEventListenersForLabels(words));
 }
 
-function showNewsMain(data) {
-    container.innerHTML = '';
-    let index = 1;
-    let nowDay: any = new Date();
-    let colorA = 'rgb(254, 245, 232)';
-    let colorB = 'rgba(254, 245, 232, 0.7)';
-
-    for (let item in data) {
-        let comDiv = document.createElement('div');
-        comDiv.classList.add("divColor");
-        let p0 = document.createElement('p');
-        let p1 = document.createElement('p');
-
-        const currentDate = new Date(Number(item));
-        p0.textContent = `${currentDate.toLocaleString('ru-RU')} [${index}]`;
-        p0.classList.add("littleData");
-        comDiv.append(p0);
-
-        p1.textContent = `${data[item]['title']}`;
-        comDiv.append(p1);
-        
-        if (nowDay != currentDate.getDate()) {
-            let randR = randomInt(200, 255);
-            let randG = randomInt(200, 255);
-            colorA = `rgb(${randR}, ${randG}, 170)`;
-            colorB = `rgba(${randR}, ${randG}, 170, 0.5)`;
-            nowDay = currentDate.getDate();
+function setEventListenersForLabels(words) {
+    keywords.addEventListener('click', e => {
+        const target = e.target as HTMLInputElement;
+        if (target.className == 'LinkNews') {
+            showNews(target.id, words);
         }
-        
-        index++;
-        if (index % 2 == 0) {
-            comDiv.style.backgroundColor = colorA;
-        } else {
-            comDiv.style.backgroundColor = colorB;
-        }
-
-        container.append(comDiv);
-    }
-}
-
-function randomInt(min, max) {
-    let rand = min + Math.random() * (max + 1 - min);
-    return Math.floor(rand);
+    });
 }
 
 function getKeywords(data) {
@@ -212,11 +178,3 @@ function showKeywords(maindata) {
     return data;
 }
 
-function setEventListenersForLabels(words) {
-    keywords.addEventListener('click', e => {
-        const target = e.target as HTMLInputElement;
-        if (target.className == 'LinkNews') {
-            showNews(target.id, words);
-        }
-    });
-}

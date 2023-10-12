@@ -9,7 +9,7 @@
         "strictFunctionTypes": true,
         
         // "noImplicitAny": true,
-        // "strictNullChecks": true,
+        "strictNullChecks": true,
         // "strictPropertyInitialization": true
     }
 }
