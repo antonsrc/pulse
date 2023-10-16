@@ -79,6 +79,8 @@ app.use((request, response, next) => {
         .finally(() => connection.end());
     });
 
+    fs.appendFileSync(path.resolve(__dirname, '../errors/USE.txt'), `\n${new Date()} ${Date.now()} use1`);
+
     const interval = setInterval(() => {
         Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
                 headers: {"Content-Type": "text/xml; charset=UTF-8"}
@@ -90,13 +92,10 @@ app.use((request, response, next) => {
             .then(res => {
                 res.forEach((result, num) => {
                     if (result.status == "fulfilled") {
-                        // console.log(`${SRC_LIST[num]['url']}: ${result.value}`);
                         loadToDB(result.value, SRC_LIST[num]['dbname']);
-                        // fs.appendFileSync('./errors/check.txt', `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
                         fs.appendFileSync(path.resolve(__dirname, '../errors/check.txt'), `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
                     }
                     if (result.status == "rejected") {
-                        // console.log(`${SRC_LIST[num]['url']}: ${result.reason}`);
                         fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
                     
                     }
@@ -107,6 +106,7 @@ app.use((request, response, next) => {
 });
 
 app.get('/ajax', (req, res) => {
+    fs.appendFileSync(path.resolve(__dirname, '../errors/USE.txt'), `\n${new Date()} ${Date.now()} get`);
     let promise = new Promise((resolve, reject) => {
         resolve(selectQueryToDB());
     })
