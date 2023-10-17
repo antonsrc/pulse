@@ -70,6 +70,59 @@ const SRC_LIST = [
     } 
 ];
 
+
+
+// let n = 0;
+// schedule.scheduleJob('*/1 * * * *', () => {
+//     console.log('This will run twice per day, midnight, and midday', n);
+//     n++;
+
+//     Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
+//         headers: {"Content-Type": "text/xml; charset=UTF-8"}
+//     })
+//     .then(xml => xml.text())
+//     .then(xmlText => xml2js.parseStringPromise(xmlText))
+//     .then(json => extractToObjWithKeys(json))
+// ))
+//     .then(res => {
+//         res.forEach((result, num) => {
+//             if (result.status == "fulfilled") {
+//                 loadToDB(result.value, SRC_LIST[num]['dbname']);
+//                 fs.appendFileSync(path.resolve(__dirname, '../errors/check.txt'), `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
+//             }
+//             if (result.status == "rejected") {
+//                 fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
+            
+//             }
+//         });
+//     });
+
+// });
+
+
+const interval = setInterval(() => {
+    Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
+            headers: {"Content-Type": "text/xml; charset=UTF-8"}
+        })
+        .then(xml => xml.text())
+        .then(xmlText => xml2js.parseStringPromise(xmlText))
+        .then(json => extractToObjWithKeys(json))
+    ))
+        .then(res => {
+            res.forEach((result, num) => {
+                if (result.status == "fulfilled") {
+                    loadToDB(result.value, SRC_LIST[num]['dbname']);
+                    fs.appendFileSync(path.resolve(__dirname, '../errors/check.txt'), `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
+                }
+                if (result.status == "rejected") {
+                    fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
+                
+                }
+            });
+        });
+}, 600000);
+
+
 app.use(express.static(path.resolve(__dirname, 'app')));
 
 app.use((request, response, next) => {
@@ -79,34 +132,10 @@ app.use((request, response, next) => {
         .finally(() => connection.end());
     });
 
-    fs.appendFileSync(path.resolve(__dirname, '../errors/USE.txt'), `\n${new Date()} ${Date.now()} use1`);
-
-    const interval = setInterval(() => {
-        Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
-                headers: {"Content-Type": "text/xml; charset=UTF-8"}
-            })
-            .then(xml => xml.text())
-            .then(xmlText => xml2js.parseStringPromise(xmlText))
-            .then(json => extractToObjWithKeys(json))
-        ))
-            .then(res => {
-                res.forEach((result, num) => {
-                    if (result.status == "fulfilled") {
-                        loadToDB(result.value, SRC_LIST[num]['dbname']);
-                        fs.appendFileSync(path.resolve(__dirname, '../errors/check.txt'), `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
-                    }
-                    if (result.status == "rejected") {
-                        fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
-                    
-                    }
-                });
-            });
-    }, 600000);
     next();
 });
 
 app.get('/ajax', (req, res) => {
-    fs.appendFileSync(path.resolve(__dirname, '../errors/USE.txt'), `\n${new Date()} ${Date.now()} get`);
     let promise = new Promise((resolve, reject) => {
         resolve(selectQueryToDB());
     })

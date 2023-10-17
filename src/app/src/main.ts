@@ -1,4 +1,4 @@
-const VERSION: string = '0.9.6';
+const VERSION: string = '0.9.7';
 
 const dialogNews = document.getElementById("dialogNews") as HTMLDialogElement;
 const container: HTMLElement = document.getElementById("container")!;
