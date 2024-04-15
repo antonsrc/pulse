@@ -11,6 +11,7 @@ const fileContent = fs.readFileSync(path.resolve(__dirname, '../src/secret.json'
 const jsonFile = JSON.parse(fileContent);
 
 const PORT = 443;
+
 const DB_SETTINGS = {
     host: "localhost",
     database: "f0695925_pulse",
@@ -67,13 +68,13 @@ const SRC_LIST = [
         url: 'https://ria.ru/export/rss2/archive/index.xml',
         dbname: 'ria_ru_export_rss2_archive_index',
         errorsDir: path.resolve(__dirname, '../errors/ria.txt')
-    } 
+    }
 ];
 
 const interval = setInterval(() => {
     Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
-            headers: {"Content-Type": "text/xml; charset=UTF-8"}
-        })
+        headers: { "Content-Type": "text/xml; charset=UTF-8" }
+    })
         .then(xml => xml.text())
         .then(xmlText => xml2js.parseStringPromise(xmlText))
         .then(json => extractToObjWithKeys(json))
@@ -86,19 +87,19 @@ const interval = setInterval(() => {
                 }
                 if (result.status == "rejected") {
                     fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
-                
+
                 }
             });
         });
 }, 600000);
-
+// }, 6000);
 app.use(express.static(path.resolve(__dirname, 'app')));
 
 app.use((request, response, next) => {
     SRC_LIST.forEach(item => {
         const connection = mysql.createConnection(DB_SETTINGS).promise();
         connection.query(createDB(item['dbname']))
-        .finally(() => connection.end());
+            .finally(() => connection.end());
     });
 
     next();
@@ -108,8 +109,8 @@ app.get('/ajax', (req, res) => {
     let promise = new Promise((resolve, reject) => {
         resolve(selectQueryToDB());
     })
-    .then(newObj => JSON.stringify(newObj))
-    .then(json => res.json(json));
+        .then(newObj => JSON.stringify(newObj))
+        .then(json => res.json(json));
 });
 
 app.listen(PORT);
@@ -132,9 +133,9 @@ function extractToObjWithKeys(json) {
 function loadToDB(obj, dbname) {
     const connection = mysql.createConnection(DB_SETTINGS).promise();
     return connection.query(`SELECT Max (date) FROM ${dbname} LIMIT 1`)
-    .then(res => res[0][0]['Max (date)'])
-    .then(maxDate => queryInsertData(maxDate, obj, connection, dbname))
-    .finally(() => connection.end());
+        .then(res => res[0][0]['Max (date)'])
+        .then(maxDate => queryInsertData(maxDate, obj, connection, dbname))
+        .finally(() => connection.end());
 }
 
 function queryInsertData(maxDate, obj, connection, dbname) {
@@ -163,20 +164,20 @@ function selectQueryToDB() {
     let queryAllDB = qAll + ` ORDER BY date DESC`;
 
     return connection.query(queryAllDB)
-    .then(res => {
-        let filteredRes = {};
-        res[0].forEach(i => {
-            let date = new Date(i['date']);
-            let dateTS = date.getTime();
-            filteredRes[dateTS] = {
-                'title': i['title'],
-                'link': i['link'],
-                'date': date
-            };
-        });
-        return filteredRes;
-    })
-    .finally(() => connection.end());
+        .then(res => {
+            let filteredRes = {};
+            res[0].forEach(i => {
+                let date = new Date(i['date']);
+                let dateTS = date.getTime();
+                filteredRes[dateTS] = {
+                    'title': i['title'],
+                    'link': i['link'],
+                    'date': date
+                };
+            });
+            return filteredRes;
+        })
+        .finally(() => connection.end());
 }
 
 function createDB(dbname) {

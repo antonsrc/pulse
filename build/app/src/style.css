@@ -145,6 +145,15 @@ a {
     padding-top: 1.7rem;
 }
 
+#titles {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding-top: 1.7rem;
+    align-content: flex-start;
+}
+
 #container {
     font-size: 1.1rem;
 }
