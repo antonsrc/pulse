@@ -91,8 +91,8 @@ const interval = setInterval(() => {
                 }
             });
         });
-}, 600000);
-// }, 6000);
+// }, 600000);
+}, 6000);
 app.use(express.static(path.resolve(__dirname, 'app')));
 
 app.use((request, response, next) => {

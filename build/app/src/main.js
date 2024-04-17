@@ -1,4 +1,4 @@
-const VERSION = '0.10.9';
+const VERSION = '0.10.10';
 
 const dialogNews = document.getElementById("dialogNews");
 const container = document.getElementById("container");
@@ -73,30 +73,22 @@ function setEventListenersForLabels(words) {
     });
 }
 
-function getData(rssData) {
-    // console.log(rssData)
+let MATCHES_WORDS = 5;
+let MIN_REFERENCE = 5;
+
+function getData(rssFromJson) {
     let groups = {};
-    let MATCHES_WORDS = 5;
-    let MIN_REFERENCE = 4;
-    let rssArr = Object.values(rssData);
 
-    for (let i = 0; i < rssArr.length; i++) {
-        let itemA = rssArr[i]['title'];
-        // let lowerCaseItemA = itemA.toLowerCase();
-        // сюда фильтр предлогов
+    let rss = Object.values(rssFromJson);
+    let titlesDigitFiltered = rss.map(item => item.title.replace(/\d/g, "")); // remove digits
+    let splitedWords = titlesDigitFiltered.map(item => item.split(" "));
+    splitedWords.forEach(item => item.sort()); // Сначалча прописные
+    let wordSet = splitedWords.map(item => new Set(item));
 
-        // let setA = new Set(lowerCaseItemA.split(' '));
-        
-        let setA = new Set(wordsFilter(itemA));
-
-
-        for (let j = i + 1; j < rssArr.length; j++) {
-            let itemB = rssArr[j]['title'];
-            // let lowerCaseItemB = itemB.toLowerCase();
-            // сюда фильтр предлогов
-    
-            let setB = new Set(wordsFilter(itemB));
-            
+    for (let i = 0; i < wordSet.length; i++) {
+        let setA = wordSet[i];
+        for (let j = i + 1; j < wordSet.length; j++) {
+            let setB = wordSet[j];
 
             let matchWords = [];
             for (let sA of setA) {
@@ -106,50 +98,42 @@ function getData(rssData) {
                 if (matchWords.length == MATCHES_WORDS) {
                     if (!groups.hasOwnProperty(i)) {
                         groups[i] = [];
-                        groups[i].push(rssArr[i]);
+                        groups[i].push(rss[i]);
                     }
-
-                    groups[i].push(rssArr[j]);
-                    // игнорирование, свойство checed или как здесь чистка
-                    rssArr[j] = {
-                        title: '',
-                        link: '',
-                        date: ''
-                    };
-                    // далее использовать только эти ключевые слова
-                    // setA = new Set(matchWords);
+                    groups[i].push(rss[j]);
+                    wordSet[j].clear();
                     break;
                 }
             }
         }
     }
 
+
     for (const key in groups) {
         if (groups[key].length < MIN_REFERENCE) {
             delete groups[key];
         }
     }
-
-    // console.log(groups)
+    console.log(groups)
     return groups;
 }
 
 function showTitles(data) {
     titles.innerHTML = '';
 
+    let i = 1;
     for (let item in data) {
         let spanWord = document.createElement('div');
 
         let lastNum = data[item].length - 1;
         let count = data[item].length;
-        spanWord.textContent = data[item][lastNum].title;
-        spanWord.style.backgroundColor = `rgba(45, 254, 115, ${0.02*count})`;
+        spanWord.textContent = `${i} ` + data[item][lastNum].title + ` (${count})`;
+        spanWord.style.backgroundColor = `rgba(50, 240, 115, ${0.02*count})`;
 
         spanWord.id = encodeURIComponent(item);
         spanWord.classList.add("LinkNews");
         titles.append(spanWord);
-
-
+        i++;
     }
     return data;
 }
