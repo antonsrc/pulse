@@ -1,4 +1,4 @@
-const VERSION = '0.10.10';
+const VERSION = '0.11.10';
 
 const dialogNews = document.getElementById("dialogNews");
 const container = document.getElementById("container");
@@ -73,23 +73,63 @@ function setEventListenersForLabels(words) {
     });
 }
 
-let MATCHES_WORDS = 5;
+let MATCHES_WORDS = 4;
 let MIN_REFERENCE = 5;
+let arrOfprepositions = [
+    'на', 'по', 'до', 'из-под', 'из-за',
+    'об', 'за', 'для', 'не'
+];
+
+let arrOfparticles = [
+    'как', 'вот', 'даже', 'ни', 'же',
+    'уж', 'из'
+];
 
 function getData(rssFromJson) {
     let groups = {};
-
     let rss = Object.values(rssFromJson);
-    let titlesDigitFiltered = rss.map(item => item.title.replace(/\d/g, "")); // remove digits
-    let splitedWords = titlesDigitFiltered.map(item => item.split(" "));
-    splitedWords.forEach(item => item.sort()); // Сначалча прописные
+    // remove digits and puctuation signs
+    let titlesFiltered = rss.map(item => item.title.replace(/[\d\p{Po}\p{S}]/gu, ""));
+    let splitedWords = titlesFiltered.map(item => item.split(" "));
+    // first words from Capital chars
+    splitedWords.forEach(item => item.sort());
+    splitedWords.forEach((item, index) => splitedWords[index] = item.map(i => item[i] = i.toLowerCase()));
     let wordSet = splitedWords.map(item => new Set(item));
+    
+    // remove empty and single chars
+    wordSet.forEach(item => {
+        for (let i of item) {
+            if (i.length <= 1) {
+                item.delete(i);
+            }
+        }
+    });
 
+    // remove prepositions
+    wordSet.forEach(item => {
+        for (let i of item) {
+            i = i.toLowerCase();
+            if (arrOfprepositions.includes(i)) {
+                item.delete(i);
+            }
+        }
+    });
+
+    // remove particles
+    wordSet.forEach(item => {
+        for (let i of item) {
+            i = i.toLowerCase();
+            if (arrOfparticles.includes(i)) {
+                item.delete(i);
+            }
+        }
+    });
+
+    console.log(wordSet)
     for (let i = 0; i < wordSet.length; i++) {
         let setA = wordSet[i];
         for (let j = i + 1; j < wordSet.length; j++) {
             let setB = wordSet[j];
-
             let matchWords = [];
             for (let sA of setA) {
                 if (setB.has(sA)) {
