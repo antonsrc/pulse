@@ -1,4 +1,33 @@
-const VERSION = '0.11.10';
+const VERSION = '0.12.10';
+
+const MATCHES_WORDS = 4;
+const MIN_REFERENCE = 5;
+const arrOfprepositions = [
+    'на', 'по', 'до', 'из-под', 'из-за',
+    'об', 'за', 'для', 'не'
+];
+
+const arrOfparticles = [
+    'как', 'вот', 'даже', 'ни', 'же',
+    'уж', 'из'
+];
+
+const hideStartSRCWords = [
+    'СМИ',
+    'МО РФ',
+    'Politico',
+    'ABC',
+    'МЧС',
+    'МВФ',
+    'СК',
+    'Минобороны',
+    'Europe 1',
+    'Reuters',
+    'Mash',
+    'SZ',
+    'ЦБ'
+];
+const MAX_LENGTH_OF_SRC = 15;
 
 const dialogNews = document.getElementById("dialogNews");
 const container = document.getElementById("container");
@@ -31,39 +60,6 @@ function getNews() {
     // .then(words => setEventListenersForLabels(words));
 }
 
-function wordsFilter(words) {
-    let lowerCaseWords = words.toLowerCase();
-    return lowerCaseWords.split(' ');
-
-
-    // save only words, digits and dash
-    let filteredSymbols = lowerCaseWords.replace(/[^\p{Alpha}\p{Nd}\-]+/giu, ' ');
-
-    // remove all digits
-    let filteredDigits = filteredSymbols.replace(/(\s|^)\d+(|\s)/giu, ' ');
-    filteredDigits = filteredDigits.replace(/\s-\d+/giu, ' ');
-
-    // remove all singles chars
-    let filteredSingles = filteredDigits.replace(/(\s|^).($|\s)/gi, ' ');
-
-    // remove all spaces
-    let filteredSpaces = filteredSingles.replace(/\s+/g, ' ').trim();
-    let wordArr = filteredSpaces.split(' ');
-
-    
-
-    // let exceptionWords = [
-    //     'в', 'по', 'над', 'у', 'из', 'за', 'к', 'под',
-    //     'о', 'на', 'для', 'об', 'с', 'не', 'что', 'при',
-    //     'до', 'и', 'от', 'млн', 'трлн', 'из-за', 'моя', 'без', 'со',
-    //     'как', 'его', 'во', 'ли', 'ее', 'тысяч', 'всей', 'я',
-    //     'тыс', 'или', 'уже', 'км'
-    // ];
-
-    // return wordArr.filter(item => !exceptionWords.includes(item));
-}
-
-
 function setEventListenersForLabels(words) {
     keywords.addEventListener('click', e => {
         const target = e.target;
@@ -73,23 +69,30 @@ function setEventListenersForLabels(words) {
     });
 }
 
-let MATCHES_WORDS = 4;
-let MIN_REFERENCE = 5;
-let arrOfprepositions = [
-    'на', 'по', 'до', 'из-под', 'из-за',
-    'об', 'за', 'для', 'не'
-];
-
-let arrOfparticles = [
-    'как', 'вот', 'даже', 'ни', 'же',
-    'уж', 'из'
-];
-
 function getData(rssFromJson) {
     let groups = {};
     let rss = Object.values(rssFromJson);
+    // remove sources in titles (e.g. Lenta:...)
+    let srcColon = rss.map(item => {
+        let regexp = new RegExp('(^|^"|^«)[а-я a-z0-9]+(»:|":|:)', 'i');
+        let resultFull = item.title.match(regexp) || [];
+        if (!resultFull[0]) {
+            return item.title;
+        }
+        let resultClean = resultFull[0]?.replace(/[«»":]/g, "");
+        if (resultClean.length > MAX_LENGTH_OF_SRC) {
+            return item.title;
+        }
+        if (hideStartSRCWords.includes(resultClean)) {
+            let regexpHideWord = new RegExp(`${resultFull[0]}`, 'i');
+            return item.title.replace(regexpHideWord, "");
+        } else {
+            return item.title;
+        }
+    });
+
     // remove digits and puctuation signs
-    let titlesFiltered = rss.map(item => item.title.replace(/[\d\p{Po}\p{S}]/gu, ""));
+    let titlesFiltered = srcColon.map(item => item.replace(/[\d\p{Po}\p{S}]/gu, ""));
     let splitedWords = titlesFiltered.map(item => item.split(" "));
     // first words from Capital chars
     splitedWords.forEach(item => item.sort());
@@ -147,7 +150,6 @@ function getData(rssFromJson) {
             }
         }
     }
-
 
     for (const key in groups) {
         if (groups[key].length < MIN_REFERENCE) {
