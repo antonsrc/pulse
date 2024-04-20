@@ -18,6 +18,7 @@ const DB_SETTINGS = {
     user: "f0695925_pulse",
     password: jsonFile['passNet']
 };
+
 const SRC_LIST = [
     {
         url: 'https://www.vedomosti.ru/rss/news.xml',
@@ -91,7 +92,7 @@ const interval = setInterval(() => {
                 }
             });
         });
-// }, 600000);
+    // }, 600000);
 }, 6000);
 app.use(express.static(path.resolve(__dirname, 'app')));
 
