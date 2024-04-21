@@ -19,6 +19,53 @@ const DB_SETTINGS = {
     password: jsonFile['passNet']
 };
 
+let readyGroups = null;
+// const TIME_INTERVAL = 10000;
+const TIME_INTERVAL = 600000;
+
+const MAX_LENGTH_OF_SRC = 15;
+const arrOfprepositions = [
+    'на',
+    'по',
+    'до',
+    'из-под',
+    'из-за',
+    'об',
+    'за',
+    'для',
+    'не'
+];
+
+const arrOfparticles = [
+    'как',
+    'вот',
+    'даже',
+    'ни',
+    'же',
+    'уж',
+    'из'
+];
+
+const hideStartSRCWords = [
+    'СМИ',
+    'МО РФ',
+    'Politico',
+    'ABC',
+    'МЧС',
+    'МВФ',
+    'СК',
+    'Минобороны',
+    'Europe 1',
+    'Reuters',
+    'Mash',
+    'SZ',
+    'ЦБ'
+];
+
+const MATCHES_WORDS = 4;
+// const MIN_REFERENCE = 3;
+const MIN_REFERENCE = 4;
+
 const SRC_LIST = [
     {
         url: 'https://www.vedomosti.ru/rss/news.xml',
@@ -72,7 +119,16 @@ const SRC_LIST = [
     }
 ];
 
-const interval = setInterval(() => {
+// first run
+let promiseFirst = new Promise((resolve, reject) => {
+    resolve(selectQueryToDB());
+}).then(newObj => {
+    fs.writeFileSync(path.resolve(__dirname, '../src/readyGroups.txt'), JSON.stringify(getData(newObj)));
+    return 1;}
+);
+
+
+setInterval(() => {
     Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
         headers: { "Content-Type": "text/xml; charset=UTF-8" }
     })
@@ -88,12 +144,14 @@ const interval = setInterval(() => {
                 }
                 if (result.status == "rejected") {
                     fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
-
                 }
             });
-        });
-    // }, 600000);
-}, 6000);
+            
+        })
+        .then(() => selectQueryToDB())
+        .then(newObj => getData(newObj));
+    }, TIME_INTERVAL);
+
 app.use(express.static(path.resolve(__dirname, 'app')));
 
 app.use((request, response, next) => {
@@ -108,13 +166,111 @@ app.use((request, response, next) => {
 
 app.get('/ajax', (req, res) => {
     let promise = new Promise((resolve, reject) => {
-        resolve(selectQueryToDB());
-    })
-        .then(newObj => JSON.stringify(newObj))
-        .then(json => res.json(json));
+        console.log(1111)
+        if (!readyGroups) {
+            console.log(222)
+            let fileData = fs.readFileSync(path.resolve(__dirname, '../src/readyGroups.txt'), "utf8");
+            readyGroups = JSON.parse(fileData);
+            console.log(readyGroups)
+        }
+
+        resolve(JSON.stringify(readyGroups));
+    }).then(json => res.json(json));
 });
 
 app.listen(PORT);
+
+function getData(rssFromJson) {
+    let groups = {};
+    let rss = Object.values(rssFromJson);
+    // remove sources in titles (e.g. Lenta:...)
+    let srcColon = rss.map(item => {
+        let regexp = new RegExp('(^|^"|^«)[а-я a-z0-9]+(»:|":|:)', 'i');
+        let resultFull = item.title.match(regexp) || [];
+        if (!resultFull[0]) {
+            return item.title;
+        }
+        let resultClean = resultFull[0].replace(/[«»":]/g, "");
+        if (resultClean.length > MAX_LENGTH_OF_SRC) {
+            return item.title;
+        }
+        if (hideStartSRCWords.includes(resultClean)) {
+            let regexpHideWord = new RegExp(`${resultFull[0]}`, 'i');
+            return item.title.replace(regexpHideWord, "");
+        } else {
+            return item.title;
+        }
+    });
+
+    // remove digits and puctuation signs
+    let titlesFiltered = srcColon.map(item => item.replace(/[\d\p{Po}\p{S}]/gu, ""));
+    let splitedWords = titlesFiltered.map(item => item.split(" "));
+    // first words from Capital chars
+    splitedWords.forEach(item => item.sort());
+    splitedWords.forEach((item, index) => splitedWords[index] = item.map(i => item[i] = i.toLowerCase()));
+    let wordSet = splitedWords.map(item => new Set(item));
+
+    // remove empty and single chars
+    wordSet.forEach(item => {
+        for (let i of item) {
+            if (i.length <= 1) {
+                item.delete(i);
+            }
+        }
+    });
+
+    // remove prepositions
+    wordSet.forEach(item => {
+        for (let i of item) {
+            i = i.toLowerCase();
+            if (arrOfprepositions.includes(i)) {
+                item.delete(i);
+            }
+        }
+    });
+
+    // remove particles
+    wordSet.forEach(item => {
+        for (let i of item) {
+            i = i.toLowerCase();
+            if (arrOfparticles.includes(i)) {
+                item.delete(i);
+            }
+        }
+    });
+
+    for (let i = 0; i < wordSet.length; i++) {
+        let setA = wordSet[i];
+        for (let j = i + 1; j < wordSet.length; j++) {
+            let setB = wordSet[j];
+            let matchWords = [];
+            for (let sA of setA) {
+                if (setB.has(sA)) {
+                    matchWords.push(sA);
+                }
+                if (matchWords.length == MATCHES_WORDS) {
+                    if (!groups.hasOwnProperty(i)) {
+                        groups[i] = [];
+                        groups[i].push(rss[i]);
+                    }
+                    groups[i].push(rss[j]);
+                    wordSet[j].clear();
+                    setA = new Set(matchWords);
+                    break;
+                }
+            }
+        }
+    }
+
+    for (const key in groups) {
+        if (groups[key].length < MIN_REFERENCE) {
+            delete groups[key];
+        }
+    }
+
+    readyGroups = groups;
+    return groups;
+}
 
 function extractToObjWithKeys(json) {
     let obj = {};
