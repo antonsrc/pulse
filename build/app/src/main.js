@@ -1,4 +1,4 @@
-const VERSION = '0.14.12';
+const VERSION = '0.14.13';
 
 const dialogNews = document.getElementById("dialogNews");
 const titles = document.getElementById("titles");
@@ -55,7 +55,10 @@ function showTitles(data) {
 }
 
 function showNews(idLabel, words) {
+
     let getNumOfGroup = idLabel.split('_')[1];
+
+    console.log(words)
 
     innerDialogNews.innerHTML = '';
     closeNewsWrapper.addEventListener('click', () => {
@@ -73,7 +76,14 @@ function showNews(idLabel, words) {
     let colorA = 'rgba(45, 115, 254, 0.3)';
     let colorB = 'rgba(45, 115, 254, 0.05)';
 
-    for (let item of words[getNumOfGroup]) {
+    for (let [ind, item] of words[getNumOfGroup].entries()) {
+        if (ind == 0) {
+            let divNews = document.createElement('div');
+            divNews.textContent = item;
+            innerDialogNews.append(divNews);
+            continue;
+        }
+
         let divNews = document.createElement('div');
         let spanTitle = document.createElement('span');
         let spanDateSrc = document.createElement('span');

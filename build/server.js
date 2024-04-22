@@ -23,6 +23,11 @@ let readyGroups = null;
 // const TIME_INTERVAL = 10000;
 const TIME_INTERVAL = 600000;
 
+// const MATCHES_WORDS = 4;
+const MATCHES_WORDS = 5;
+// const MIN_REFERENCE = 4;
+const MIN_REFERENCE = 5;
+
 const MAX_LENGTH_OF_SRC = 15;
 const arrOfprepositions = [
     'на',
@@ -33,7 +38,10 @@ const arrOfprepositions = [
     'об',
     'за',
     'для',
-    'не'
+    'не',
+    'в',
+    'к',
+    'между'
 ];
 
 const arrOfparticles = [
@@ -44,6 +52,16 @@ const arrOfparticles = [
     'же',
     'уж',
     'из'
+];
+
+const arrOfconjunctions = [
+    'и',
+    'а',
+    'но',
+    'что',
+    'когда',
+    'если',
+    'да'
 ];
 
 const hideStartSRCWords = [
@@ -61,10 +79,6 @@ const hideStartSRCWords = [
     'SZ',
     'ЦБ'
 ];
-
-const MATCHES_WORDS = 4;
-// const MIN_REFERENCE = 3;
-const MIN_REFERENCE = 4;
 
 const SRC_LIST = [
     {
@@ -166,9 +180,7 @@ app.use((request, response, next) => {
 
 app.get('/ajax', (req, res) => {
     let promise = new Promise((resolve, reject) => {
-        console.log(1111)
         if (!readyGroups) {
-            console.log(222)
             let fileData = fs.readFileSync(path.resolve(__dirname, '../src/readyGroups.txt'), "utf8");
             readyGroups = JSON.parse(fileData);
             console.log(readyGroups)
@@ -203,11 +215,14 @@ function getData(rssFromJson) {
     });
 
     // remove digits and puctuation signs
-    let titlesFiltered = srcColon.map(item => item.replace(/[\d\p{Po}\p{S}]/gu, ""));
+    let titlesFiltered = srcColon.map(item => item.replace(/[\d\p{Po}\p{S}«»]/gu, ""));
     let splitedWords = titlesFiltered.map(item => item.split(" "));
+    // console.log(1+'___'+splitedWords[0])
     // first words from Capital chars
     splitedWords.forEach(item => item.sort());
+    // console.log(2+'___'+splitedWords[0])
     splitedWords.forEach((item, index) => splitedWords[index] = item.map(i => item[i] = i.toLowerCase()));
+    // console.log(3+'___'+splitedWords[0])
     let wordSet = splitedWords.map(item => new Set(item));
 
     // remove empty and single chars
@@ -239,6 +254,18 @@ function getData(rssFromJson) {
         }
     });
 
+    // remove conjunctions
+    wordSet.forEach(item => {
+        for (let i of item) {
+            i = i.toLowerCase();
+            if (arrOfconjunctions.includes(i)) {
+                item.delete(i);
+            }
+        }
+    });
+
+    // console.log(4+'___'+Array.from(wordSet[0]))
+
     for (let i = 0; i < wordSet.length; i++) {
         let setA = wordSet[i];
         for (let j = i + 1; j < wordSet.length; j++) {
@@ -251,6 +278,7 @@ function getData(rssFromJson) {
                 if (matchWords.length == MATCHES_WORDS) {
                     if (!groups.hasOwnProperty(i)) {
                         groups[i] = [];
+                        groups[i].push(matchWords);
                         groups[i].push(rss[i]);
                     }
                     groups[i].push(rss[j]);
@@ -267,7 +295,6 @@ function getData(rssFromJson) {
             delete groups[key];
         }
     }
-
     readyGroups = groups;
     return groups;
 }
