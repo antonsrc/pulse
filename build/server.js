@@ -20,13 +20,14 @@ const DB_SETTINGS = {
 };
 
 let readyGroups = null;
-// const TIME_INTERVAL = 10000;
-const TIME_INTERVAL = 600000;
 
-// const MATCHES_WORDS = 4;
-const MATCHES_WORDS = 5;
-// const MIN_REFERENCE = 4;
-const MIN_REFERENCE = 5;
+const TIME_INTERVAL = 600000;
+const MATCHES_WORDS = 4;
+const MIN_REFERENCE = 4;
+
+// const TIME_INTERVAL = 1000000;
+// const MATCHES_WORDS = 3;
+// const MIN_REFERENCE = 3;
 
 const MAX_LENGTH_OF_SRC = 15;
 const arrOfprepositions = [
@@ -134,13 +135,12 @@ const SRC_LIST = [
 ];
 
 // first run
-let promiseFirst = new Promise((resolve, reject) => {
+new Promise((resolve, reject) => {
     resolve(selectQueryToDB());
 }).then(newObj => {
     fs.writeFileSync(path.resolve(__dirname, '../src/readyGroups.txt'), JSON.stringify(getData(newObj)));
     return 1;}
 );
-
 
 setInterval(() => {
     Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
@@ -195,6 +195,7 @@ app.listen(PORT);
 function getData(rssFromJson) {
     let groups = {};
     let rss = Object.values(rssFromJson);
+    // console.log(rss[137])
     // remove sources in titles (e.g. Lenta:...)
     let srcColon = rss.map(item => {
         let regexp = new RegExp('(^|^"|^«)[а-я a-z0-9]+(»:|":|:)', 'i');
@@ -213,16 +214,16 @@ function getData(rssFromJson) {
             return item.title;
         }
     });
-
+    // console.log(srcColon[137])
     // remove digits and puctuation signs
     let titlesFiltered = srcColon.map(item => item.replace(/[\d\p{Po}\p{S}«»]/gu, ""));
+    // console.log(titlesFiltered[137])
     let splitedWords = titlesFiltered.map(item => item.split(" "));
-    // console.log(1+'___'+splitedWords[0])
+    // console.log(splitedWords[137])
     // first words from Capital chars
     splitedWords.forEach(item => item.sort());
-    // console.log(2+'___'+splitedWords[0])
+    // console.log(splitedWords[137])
     splitedWords.forEach((item, index) => splitedWords[index] = item.map(i => item[i] = i.toLowerCase()));
-    // console.log(3+'___'+splitedWords[0])
     let wordSet = splitedWords.map(item => new Set(item));
 
     // remove empty and single chars
@@ -233,7 +234,7 @@ function getData(rssFromJson) {
             }
         }
     });
-
+    // console.log(wordSet[137])
     // remove prepositions
     wordSet.forEach(item => {
         for (let i of item) {
@@ -243,7 +244,7 @@ function getData(rssFromJson) {
             }
         }
     });
-
+    // console.log(wordSet[137])
     // remove particles
     wordSet.forEach(item => {
         for (let i of item) {
@@ -253,7 +254,7 @@ function getData(rssFromJson) {
             }
         }
     });
-
+    // console.log(wordSet[137])
     // remove conjunctions
     wordSet.forEach(item => {
         for (let i of item) {
@@ -263,15 +264,15 @@ function getData(rssFromJson) {
             }
         }
     });
-
-    // console.log(4+'___'+Array.from(wordSet[0]))
-
+    // console.log(wordSet[137])
     for (let i = 0; i < wordSet.length; i++) {
         let setA = wordSet[i];
         for (let j = i + 1; j < wordSet.length; j++) {
             let setB = wordSet[j];
             let matchWords = [];
+            let index = 0;
             for (let sA of setA) {
+                if (index >= MATCHES_WORDS) break;
                 if (setB.has(sA)) {
                     matchWords.push(sA);
                 }
@@ -284,8 +285,10 @@ function getData(rssFromJson) {
                     groups[i].push(rss[j]);
                     wordSet[j].clear();
                     setA = new Set(matchWords);
+                    // console.log(matchWords)
                     break;
                 }
+                index++;
             }
         }
     }

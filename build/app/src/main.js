@@ -1,4 +1,4 @@
-const VERSION = '0.14.13';
+const VERSION = '0.14.14';
 
 const dialogNews = document.getElementById("dialogNews");
 const titles = document.getElementById("titles");
@@ -42,7 +42,7 @@ function showTitles(data) {
         let spanWord = document.createElement('div');
 
         let lastNum = data[item].length - 1;
-        let count = data[item].length;
+        let count = data[item].length - 1;
         spanWord.textContent = `${i} ` + data[item][lastNum].title + ` (${count})`;
         spanWord.style.backgroundColor = `rgba(50, 240, 115, ${0.02 * count})`;
 
@@ -70,7 +70,7 @@ function showNews(idLabel, words) {
     document.body.classList.add("Scroll-lock");
     dialogNews.inert = false;
 
-    NewsHeaderInn.innerHTML = `Источников: ${words[getNumOfGroup].length}`;
+    NewsHeaderInn.innerHTML = `Источников: ${words[getNumOfGroup].length - 1}`;
 
     let index = 1;
     let colorA = 'rgba(45, 115, 254, 0.3)';
