@@ -7,7 +7,7 @@ const path = require("path");
 
 const app = express();
 
-const fileContent = fs.readFileSync(path.resolve(__dirname, '../src/secret.json'), "utf8");
+const fileContent = fs.readFileSync(path.resolve(__dirname, '../src_back/secret.json'), "utf8");
 const jsonFile = JSON.parse(fileContent);
 
 const PORT = 443;
@@ -52,7 +52,8 @@ const arrOfparticles = [
     'ни',
     'же',
     'уж',
-    'из'
+    'из',
+    'над'
 ];
 
 const arrOfconjunctions = [
@@ -79,6 +80,17 @@ const hideStartSRCWords = [
     'Mash',
     'SZ',
     'ЦБ'
+];
+
+const unitsOfMeasurement = [
+    'м',
+    'мм',
+    'см',
+    'км',
+    'млн',
+    'млрд',
+    'г',
+    'кг'
 ];
 
 const SRC_LIST = [
@@ -138,7 +150,7 @@ const SRC_LIST = [
 new Promise((resolve, reject) => {
     resolve(selectQueryToDB());
 }).then(newObj => {
-    fs.writeFileSync(path.resolve(__dirname, '../src/readyGroups.txt'), JSON.stringify(getData(newObj)));
+    fs.writeFileSync(path.resolve(__dirname, '../src_back/readyGroups.txt'), JSON.stringify(getData(newObj)));
     return 1;}
 );
 
@@ -181,7 +193,7 @@ app.use((request, response, next) => {
 app.get('/ajax', (req, res) => {
     let promise = new Promise((resolve, reject) => {
         if (!readyGroups) {
-            let fileData = fs.readFileSync(path.resolve(__dirname, '../src/readyGroups.txt'), "utf8");
+            let fileData = fs.readFileSync(path.resolve(__dirname, '../src_back/readyGroups.txt'), "utf8");
             readyGroups = JSON.parse(fileData);
             console.log(readyGroups)
         }
@@ -195,7 +207,7 @@ app.listen(PORT);
 function getData(rssFromJson) {
     let groups = {};
     let rss = Object.values(rssFromJson);
-    // console.log(rss[137])
+
     // remove sources in titles (e.g. Lenta:...)
     let srcColon = rss.map(item => {
         let regexp = new RegExp('(^|^"|^«)[а-я a-z0-9]+(»:|":|:)', 'i');
@@ -214,15 +226,12 @@ function getData(rssFromJson) {
             return item.title;
         }
     });
-    // console.log(srcColon[137])
+
     // remove digits and puctuation signs
     let titlesFiltered = srcColon.map(item => item.replace(/[\d\p{Po}\p{S}«»]/gu, ""));
-    // console.log(titlesFiltered[137])
     let splitedWords = titlesFiltered.map(item => item.split(" "));
-    // console.log(splitedWords[137])
     // first words from Capital chars
     splitedWords.forEach(item => item.sort());
-    // console.log(splitedWords[137])
     splitedWords.forEach((item, index) => splitedWords[index] = item.map(i => item[i] = i.toLowerCase()));
     let wordSet = splitedWords.map(item => new Set(item));
 
@@ -234,7 +243,7 @@ function getData(rssFromJson) {
             }
         }
     });
-    // console.log(wordSet[137])
+
     // remove prepositions
     wordSet.forEach(item => {
         for (let i of item) {
@@ -244,7 +253,7 @@ function getData(rssFromJson) {
             }
         }
     });
-    // console.log(wordSet[137])
+
     // remove particles
     wordSet.forEach(item => {
         for (let i of item) {
@@ -254,7 +263,7 @@ function getData(rssFromJson) {
             }
         }
     });
-    // console.log(wordSet[137])
+
     // remove conjunctions
     wordSet.forEach(item => {
         for (let i of item) {
@@ -264,7 +273,17 @@ function getData(rssFromJson) {
             }
         }
     });
-    // console.log(wordSet[137])
+
+    // remove units of measurement
+    wordSet.forEach(item => {
+        for (let i of item) {
+            i = i.toLowerCase();
+            if (unitsOfMeasurement.includes(i)) {
+                item.delete(i);
+            }
+        }
+    });
+
     for (let i = 0; i < wordSet.length; i++) {
         let setA = wordSet[i];
         for (let j = i + 1; j < wordSet.length; j++) {

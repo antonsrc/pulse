@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src_front/*"]
+    }
+  },
+  "exclude": ["node_modules", "build", "errors", "src"]
+}
