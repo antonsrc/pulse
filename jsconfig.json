@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src_front/*"]
+      "@/*": ["./src_client/*"]
     }
   },
-  "exclude": ["node_modules", "build", "errors", "src"]
+  "exclude": ["node_modules", "build_client"]
 }

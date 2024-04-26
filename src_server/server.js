@@ -7,7 +7,7 @@ const path = require("path");
 
 const app = express();
 
-const fileContent = fs.readFileSync(path.resolve(__dirname, '../src_back/secret.json'), "utf8");
+const fileContent = fs.readFileSync(path.resolve(__dirname, 'secret.json'), "utf8");
 const jsonFile = JSON.parse(fileContent);
 
 const PORT = 443;
@@ -25,7 +25,7 @@ const TIME_INTERVAL = 600000;
 const MATCHES_WORDS = 4;
 const MIN_REFERENCE = 4;
 
-// const TIME_INTERVAL = 1000000;
+// const TIME_INTERVAL = 6000;
 // const MATCHES_WORDS = 3;
 // const MIN_REFERENCE = 3;
 
@@ -97,52 +97,52 @@ const SRC_LIST = [
     {
         url: 'https://www.vedomosti.ru/rss/news.xml',
         dbname: 'vedomosti_ru_rss_news',
-        errorsDir: path.resolve(__dirname, '../errors/vedomosti.txt')
+        errorsDir: path.resolve(__dirname, './errors/vedomosti.txt')
     },
     {
         url: 'https://www.rg.ru/xml/index.xml',
         dbname: 'rg_ru_xml_index',
-        errorsDir: path.resolve(__dirname, '../errors/rg.txt')
+        errorsDir: path.resolve(__dirname, './errors/rg.txt')
     },
     {
         url: 'https://tass.ru/rss/v2.xml',
         dbname: 'tass_ru_rss_v2',
-        errorsDir: path.resolve(__dirname, '../errors/tass.txt')
+        errorsDir: path.resolve(__dirname, './errors/tass.txt')
     },
     {
         url: 'https://tvzvezda.ru/export/rss.xml',
         dbname: 'tvzvezda_ru_export_rss',
-        errorsDir: path.resolve(__dirname, '../errors/tvzvezda.txt')
+        errorsDir: path.resolve(__dirname, './errors/tvzvezda.txt')
     },
     {
         url: 'https://russian.rt.com/rss',
         dbname: 'russian_rt_com_rss',
-        errorsDir: path.resolve(__dirname, '../errors/rt.txt')
+        errorsDir: path.resolve(__dirname, './errors/rt.txt')
     },
     {
         url: 'https://www.cnews.ru/inc/rss/news.xml',
         dbname: 'cnews_ru_inc_rss_news',
-        errorsDir: path.resolve(__dirname, '../errors/cnews.txt')
+        errorsDir: path.resolve(__dirname, './errors/cnews.txt')
     },
     {
         url: 'https://3dnews.ru/news/rss/',
         dbname: '3dnews_ru_news_rss',
-        errorsDir: path.resolve(__dirname, '../errors/3dnews.txt')
+        errorsDir: path.resolve(__dirname, './errors/3dnews.txt')
     },
     {
         url: 'https://www.ixbt.com/export/news.rss',
         dbname: 'ixbt_com_export_news',
-        errorsDir: path.resolve(__dirname, '../errors/ixbt.txt')
+        errorsDir: path.resolve(__dirname, './errors/ixbt.txt')
     },
     {
         url: 'https://habr.com/ru/rss/news/?fl=ru',
         dbname: 'habr_com_ru_rss_news',
-        errorsDir: path.resolve(__dirname, '../errors/habr.txt')
+        errorsDir: path.resolve(__dirname, './errors/habr.txt')
     },
     {
         url: 'https://ria.ru/export/rss2/archive/index.xml',
         dbname: 'ria_ru_export_rss2_archive_index',
-        errorsDir: path.resolve(__dirname, '../errors/ria.txt')
+        errorsDir: path.resolve(__dirname, './errors/ria.txt')
     }
 ];
 
@@ -150,7 +150,7 @@ const SRC_LIST = [
 new Promise((resolve, reject) => {
     resolve(selectQueryToDB());
 }).then(newObj => {
-    fs.writeFileSync(path.resolve(__dirname, '../src_back/readyGroups.txt'), JSON.stringify(getData(newObj)));
+    fs.writeFileSync(path.resolve(__dirname, 'readyGroups.txt'), JSON.stringify(getData(newObj)));
     return 1;}
 );
 
@@ -166,7 +166,7 @@ setInterval(() => {
             res.forEach((result, num) => {
                 if (result.status == "fulfilled") {
                     loadToDB(result.value, SRC_LIST[num]['dbname']);
-                    fs.appendFileSync(path.resolve(__dirname, '../errors/check.txt'), `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
+                    fs.appendFileSync(path.resolve(__dirname, './errors/check.txt'), `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
                 }
                 if (result.status == "rejected") {
                     fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
@@ -178,7 +178,7 @@ setInterval(() => {
         .then(newObj => getData(newObj));
     }, TIME_INTERVAL);
 
-app.use(express.static(path.resolve(__dirname, 'app')));
+app.use(express.static(path.resolve(__dirname, '../build_client')));
 
 app.use((request, response, next) => {
     SRC_LIST.forEach(item => {
@@ -193,7 +193,7 @@ app.use((request, response, next) => {
 app.get('/ajax', (req, res) => {
     let promise = new Promise((resolve, reject) => {
         if (!readyGroups) {
-            let fileData = fs.readFileSync(path.resolve(__dirname, '../src_back/readyGroups.txt'), "utf8");
+            let fileData = fs.readFileSync(path.resolve(__dirname, 'readyGroups.txt'), "utf8");
             readyGroups = JSON.parse(fileData);
             console.log(readyGroups)
         }
