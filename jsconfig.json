@@ -1,8 +1,0 @@
-{
-  "compilerOptions": {
-    "paths": {
-      "@/*": ["./src_client/*"]
-    }
-  },
-  "exclude": ["node_modules", "build_client"]
-}

@@ -3,6 +3,7 @@ secret.json
 node_modules/
 src_server/errors/
 build_client/
+build_server/
 secret.json
 readyGroups.txt
 .htaccess
