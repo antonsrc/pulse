@@ -1,4 +1,4 @@
-const VERSION = '0.14.15';
+const VERSION = '0.14.16';
 
 const dialogNews = document.getElementById("dialogNews");
 const titles = document.getElementById("titles");

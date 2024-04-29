@@ -1,6 +1,6 @@
 const express = require('express');
 const xml2js = require('xml2js');
-const fetch = require('node-fetch');
+const fetchNode = require('node-fetch');
 const mysql = require("mysql2");
 const fs = require("fs");
 const path = require("path");
@@ -27,7 +27,7 @@ const MIN_REFERENCE = 4;
 
 // const TIME_INTERVAL = 6000;
 // const MATCHES_WORDS = 3;
-// const MIN_REFERENCE = 3;
+// const MIN_REFERENCE = 2;
 
 const MAX_LENGTH_OF_SRC = 15;
 const arrOfprepositions = [
@@ -155,7 +155,7 @@ new Promise((resolve, reject) => {
 );
 
 setInterval(() => {
-    Promise.allSettled(SRC_LIST.map(ind => fetch(ind['url'], {
+    Promise.allSettled(SRC_LIST.map(ind => fetchNode(ind['url'], {
         headers: { "Content-Type": "text/xml; charset=UTF-8" }
     })
         .then(xml => xml.text())
@@ -195,7 +195,6 @@ app.get('/ajax', (req, res) => {
         if (!readyGroups) {
             let fileData = fs.readFileSync(path.resolve(__dirname, 'readyGroups.txt'), "utf8");
             readyGroups = JSON.parse(fileData);
-            console.log(readyGroups)
         }
 
         resolve(JSON.stringify(readyGroups));
@@ -208,8 +207,10 @@ function getData(rssFromJson) {
     let groups = {};
     let rss = Object.values(rssFromJson);
 
+    
+
     // remove sources in titles (e.g. Lenta:...)
-    let srcColon = rss.map(item => {
+    let srcColon = rss.map((item:any) => {
         let regexp = new RegExp('(^|^"|^«)[а-я a-z0-9]+(»:|":|:)', 'i');
         let resultFull = item.title.match(regexp) || [];
         if (!resultFull[0]) {
@@ -235,9 +236,11 @@ function getData(rssFromJson) {
     splitedWords.forEach((item, index) => splitedWords[index] = item.map(i => item[i] = i.toLowerCase()));
     let wordSet = splitedWords.map(item => new Set(item));
 
+    // console.log(wordSet)
     // remove empty and single chars
-    wordSet.forEach(item => {
-        for (let i of item) {
+    wordSet.forEach((item:any) => {
+        for (let j of Array.from(item.values())) {
+            let i = j.toString();
             if (i.length <= 1) {
                 item.delete(i);
             }
@@ -245,8 +248,9 @@ function getData(rssFromJson) {
     });
 
     // remove prepositions
-    wordSet.forEach(item => {
-        for (let i of item) {
+    wordSet.forEach((item:any) => {
+        for (let j of Array.from(item.values())) {
+            let i = j.toString();
             i = i.toLowerCase();
             if (arrOfprepositions.includes(i)) {
                 item.delete(i);
@@ -255,8 +259,9 @@ function getData(rssFromJson) {
     });
 
     // remove particles
-    wordSet.forEach(item => {
-        for (let i of item) {
+    wordSet.forEach((item:any) => {
+        for (let j of Array.from(item.values())) {
+            let i = j.toString();
             i = i.toLowerCase();
             if (arrOfparticles.includes(i)) {
                 item.delete(i);
@@ -265,8 +270,9 @@ function getData(rssFromJson) {
     });
 
     // remove conjunctions
-    wordSet.forEach(item => {
-        for (let i of item) {
+    wordSet.forEach((item:any) => {
+        for (let j of Array.from(item.values())) {
+            let i = j.toString();
             i = i.toLowerCase();
             if (arrOfconjunctions.includes(i)) {
                 item.delete(i);
@@ -275,22 +281,25 @@ function getData(rssFromJson) {
     });
 
     // remove units of measurement
-    wordSet.forEach(item => {
-        for (let i of item) {
+    wordSet.forEach((item:any) => {
+        for (let j of Array.from(item.values())) {
+            let i = j.toString();
             i = i.toLowerCase();
             if (unitsOfMeasurement.includes(i)) {
                 item.delete(i);
             }
         }
     });
-
+    
     for (let i = 0; i < wordSet.length; i++) {
-        let setA = wordSet[i];
+        let setA: any = wordSet[i];
         for (let j = i + 1; j < wordSet.length; j++) {
             let setB = wordSet[j];
             let matchWords = [];
             let index = 0;
-            for (let sA of setA) {
+
+            for (let sA of Array.from(setA.values())) {
+                // console.log('5_____ ')
                 if (index >= MATCHES_WORDS) break;
                 if (setB.has(sA)) {
                     matchWords.push(sA);

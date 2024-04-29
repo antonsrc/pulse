@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
+  root: "./src_client",
   plugins: [
     vue(),
   ],
@@ -13,6 +14,7 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'build_client'
+    outDir: '../build_client',
+    emptyOutDir: false
   },
 })
