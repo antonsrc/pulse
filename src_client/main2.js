@@ -1,4 +1,4 @@
-const VERSION = '0.14.16';
+const VERSION = '0.14.17';
 
 const dialogNews = document.getElementById("dialogNews");
 const titles = document.getElementById("titles");
@@ -18,7 +18,7 @@ dialogNews.addEventListener('close', () => {
 });
 
 function getNews() {
-    fetch("/ajax")
+    fetch("/root")
         .then(res => res.json())
         .then(data => JSON.parse(data))
         .then(titles => showTitles(titles))

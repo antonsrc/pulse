@@ -2,7 +2,8 @@ desktop.ini
 secret.json
 node_modules/
 src_server/errors/
+src_server/tmp/
 build_client/
-build_server/
+readyGroups.txt
 secret.json
 .htaccess

@@ -1,60 +1,43 @@
+"use strict"
 const express = require('express');
 const xml2js = require('xml2js');
 const fetchNode = require('node-fetch');
-const mysql = require("mysql2");
-const fs = require("fs");
-const path = require("path");
+const mysql = require('mysql2');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
-const fileContent = fs.readFileSync(path.resolve(__dirname, 'secret.json'), "utf8");
-const jsonFile = JSON.parse(fileContent);
+let timeInterval = 600000;
+let port = 443;
+let matchesWords = 4;
+let minReference = 4;
+let maxLengthOfSrc = 15;
 
-const PORT = 443;
+let mode = process.argv[2];
+if (mode == 'dev' || mode == 'development') {
+    timeInterval = 6000;
+    port = 443;
+    matchesWords = 3;
+    minReference = 2;
+    maxLengthOfSrc = 15;
+}
 
+// const __dirname = [path.resolve(), 'src_server'];
+
+const passFile = fs.readFileSync(path.resolve(__dirname, 'secret.json'), "utf8");
+const pass = JSON.parse(passFile);
 const DB_SETTINGS = {
     host: "localhost",
     database: "f0695925_pulse",
     user: "f0695925_pulse",
-    password: jsonFile['passNet']
+    password: pass['passNet']
 };
 
-let readyGroups = null;
+let readyGroups = {};
 
-const TIME_INTERVAL = 600000;
-const MATCHES_WORDS = 4;
-const MIN_REFERENCE = 4;
-
-// const TIME_INTERVAL = 6000;
-// const MATCHES_WORDS = 3;
-// const MIN_REFERENCE = 2;
-
-const MAX_LENGTH_OF_SRC = 15;
-const arrOfprepositions = [
-    'на',
-    'по',
-    'до',
-    'из-под',
-    'из-за',
-    'об',
-    'за',
-    'для',
-    'не',
-    'в',
-    'к',
-    'между'
-];
-
-const arrOfparticles = [
-    'как',
-    'вот',
-    'даже',
-    'ни',
-    'же',
-    'уж',
-    'из',
-    'над'
-];
+const prepositions = fs.readFileSync(path.resolve(__dirname, 'wordsPrepositions.json'), "utf8");
+const arrOfparticles = fs.readFileSync(path.resolve(__dirname, 'wordsParticles.json'), "utf8");
 
 const arrOfconjunctions = [
     'и',
@@ -176,7 +159,7 @@ setInterval(() => {
         })
         .then(() => selectQueryToDB())
         .then(newObj => getData(newObj));
-    }, TIME_INTERVAL);
+    }, timeInterval);
 
 app.use(express.static(path.resolve(__dirname, '../build_client')));
 
@@ -190,9 +173,10 @@ app.use((request, response, next) => {
     next();
 });
 
-app.get('/ajax', (req, res) => {
+
+app.get('/root', (req, res) => {
     let promise = new Promise((resolve, reject) => {
-        if (!readyGroups) {
+        if (!Object.keys(readyGroups).length) {
             let fileData = fs.readFileSync(path.resolve(__dirname, 'readyGroups.txt'), "utf8");
             readyGroups = JSON.parse(fileData);
         }
@@ -201,7 +185,7 @@ app.get('/ajax', (req, res) => {
     }).then(json => res.json(json));
 });
 
-app.listen(PORT);
+app.listen(port);
 
 function getData(rssFromJson) {
     let groups = {};
@@ -210,14 +194,14 @@ function getData(rssFromJson) {
     
 
     // remove sources in titles (e.g. Lenta:...)
-    let srcColon = rss.map((item:any) => {
+    let srcColon = rss.map(item => {
         let regexp = new RegExp('(^|^"|^«)[а-я a-z0-9]+(»:|":|:)', 'i');
         let resultFull = item.title.match(regexp) || [];
         if (!resultFull[0]) {
             return item.title;
         }
         let resultClean = resultFull[0].replace(/[«»":]/g, "");
-        if (resultClean.length > MAX_LENGTH_OF_SRC) {
+        if (resultClean.length > maxLengthOfSrc) {
             return item.title;
         }
         if (hideStartSRCWords.includes(resultClean)) {
@@ -238,7 +222,7 @@ function getData(rssFromJson) {
 
     // console.log(wordSet)
     // remove empty and single chars
-    wordSet.forEach((item:any) => {
+    wordSet.forEach(item => {
         for (let j of Array.from(item.values())) {
             let i = j.toString();
             if (i.length <= 1) {
@@ -248,18 +232,18 @@ function getData(rssFromJson) {
     });
 
     // remove prepositions
-    wordSet.forEach((item:any) => {
+    wordSet.forEach(item => {
         for (let j of Array.from(item.values())) {
             let i = j.toString();
             i = i.toLowerCase();
-            if (arrOfprepositions.includes(i)) {
+            if (prepositions.includes(i)) {
                 item.delete(i);
             }
         }
     });
 
     // remove particles
-    wordSet.forEach((item:any) => {
+    wordSet.forEach(item => {
         for (let j of Array.from(item.values())) {
             let i = j.toString();
             i = i.toLowerCase();
@@ -270,7 +254,7 @@ function getData(rssFromJson) {
     });
 
     // remove conjunctions
-    wordSet.forEach((item:any) => {
+    wordSet.forEach(item => {
         for (let j of Array.from(item.values())) {
             let i = j.toString();
             i = i.toLowerCase();
@@ -281,7 +265,7 @@ function getData(rssFromJson) {
     });
 
     // remove units of measurement
-    wordSet.forEach((item:any) => {
+    wordSet.forEach(item => {
         for (let j of Array.from(item.values())) {
             let i = j.toString();
             i = i.toLowerCase();
@@ -292,7 +276,7 @@ function getData(rssFromJson) {
     });
     
     for (let i = 0; i < wordSet.length; i++) {
-        let setA: any = wordSet[i];
+        let setA = wordSet[i];
         for (let j = i + 1; j < wordSet.length; j++) {
             let setB = wordSet[j];
             let matchWords = [];
@@ -300,11 +284,11 @@ function getData(rssFromJson) {
 
             for (let sA of Array.from(setA.values())) {
                 // console.log('5_____ ')
-                if (index >= MATCHES_WORDS) break;
+                if (index >= matchesWords) break;
                 if (setB.has(sA)) {
                     matchWords.push(sA);
                 }
-                if (matchWords.length == MATCHES_WORDS) {
+                if (matchWords.length == matchesWords) {
                     if (!groups.hasOwnProperty(i)) {
                         groups[i] = [];
                         groups[i].push(matchWords);
@@ -322,7 +306,7 @@ function getData(rssFromJson) {
     }
 
     for (const key in groups) {
-        if (groups[key].length < MIN_REFERENCE) {
+        if (groups[key].length < minReference) {
             delete groups[key];
         }
     }

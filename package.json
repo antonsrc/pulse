@@ -7,15 +7,12 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
     "@vitejs/plugin-vue": "^5.0.4",
-    "typescript": "^5.4.5",
     "vite": "^5.1.6",
     "vue": "^3.4.21"
   },
   "scripts": {
-    "start": "node build_server/server.js",
-    "buildServer": "npx tsc",
-    "buildClient": "vite build"
+    "start": "node src_server/server.js",
+    "build": "vite build"
   }
 }
