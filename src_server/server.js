@@ -1,4 +1,5 @@
 "use strict"
+
 const express = require('express');
 const xml2js = require('xml2js');
 const fetchNode = require('node-fetch');
@@ -23,8 +24,6 @@ if (mode == 'dev' || mode == 'development') {
     maxLengthOfSrc = 15;
 }
 
-// const __dirname = [path.resolve(), 'src_server'];
-
 const passFile = fs.readFileSync(path.resolve(__dirname, 'secret.json'), "utf8");
 const pass = JSON.parse(passFile);
 const DB_SETTINGS = {
@@ -36,45 +35,13 @@ const DB_SETTINGS = {
 
 let readyGroups = {};
 
-const prepositions = fs.readFileSync(path.resolve(__dirname, 'wordsPrepositions.json'), "utf8");
-const arrOfparticles = fs.readFileSync(path.resolve(__dirname, 'wordsParticles.json'), "utf8");
+const prepositions = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsPrepositions.json'), "utf8");
+const particles = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsParticles.json'), "utf8");
+const pronouns = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsPronouns.json'), "utf8");
+const conjunctions = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsConjunctions.json'), "utf8");
+const measurements = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsMeasurements.json'), "utf8");
 
-const arrOfconjunctions = [
-    'и',
-    'а',
-    'но',
-    'что',
-    'когда',
-    'если',
-    'да'
-];
-
-const hideStartSRCWords = [
-    'СМИ',
-    'МО РФ',
-    'Politico',
-    'ABC',
-    'МЧС',
-    'МВФ',
-    'СК',
-    'Минобороны',
-    'Europe 1',
-    'Reuters',
-    'Mash',
-    'SZ',
-    'ЦБ'
-];
-
-const unitsOfMeasurement = [
-    'м',
-    'мм',
-    'см',
-    'км',
-    'млн',
-    'млрд',
-    'г',
-    'кг'
-];
+const startSRCWords = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsStartSRCWords.json'), "utf8");
 
 const SRC_LIST = [
     {
@@ -173,7 +140,6 @@ app.use((request, response, next) => {
     next();
 });
 
-
 app.get('/root', (req, res) => {
     let promise = new Promise((resolve, reject) => {
         if (!Object.keys(readyGroups).length) {
@@ -191,8 +157,6 @@ function getData(rssFromJson) {
     let groups = {};
     let rss = Object.values(rssFromJson);
 
-    
-
     // remove sources in titles (e.g. Lenta:...)
     let srcColon = rss.map(item => {
         let regexp = new RegExp('(^|^"|^«)[а-я a-z0-9]+(»:|":|:)', 'i');
@@ -204,7 +168,7 @@ function getData(rssFromJson) {
         if (resultClean.length > maxLengthOfSrc) {
             return item.title;
         }
-        if (hideStartSRCWords.includes(resultClean)) {
+        if (startSRCWords.includes(resultClean)) {
             let regexpHideWord = new RegExp(`${resultFull[0]}`, 'i');
             return item.title.replace(regexpHideWord, "");
         } else {
@@ -220,7 +184,6 @@ function getData(rssFromJson) {
     splitedWords.forEach((item, index) => splitedWords[index] = item.map(i => item[i] = i.toLowerCase()));
     let wordSet = splitedWords.map(item => new Set(item));
 
-    // console.log(wordSet)
     // remove empty and single chars
     wordSet.forEach(item => {
         for (let j of Array.from(item.values())) {
@@ -247,7 +210,18 @@ function getData(rssFromJson) {
         for (let j of Array.from(item.values())) {
             let i = j.toString();
             i = i.toLowerCase();
-            if (arrOfparticles.includes(i)) {
+            if (particles.includes(i)) {
+                item.delete(i);
+            }
+        }
+    });
+
+    // remove pronouns
+    wordSet.forEach(item => {
+        for (let j of Array.from(item.values())) {
+            let i = j.toString();
+            i = i.toLowerCase();
+            if (pronouns.includes(i)) {
                 item.delete(i);
             }
         }
@@ -258,7 +232,7 @@ function getData(rssFromJson) {
         for (let j of Array.from(item.values())) {
             let i = j.toString();
             i = i.toLowerCase();
-            if (arrOfconjunctions.includes(i)) {
+            if (conjunctions.includes(i)) {
                 item.delete(i);
             }
         }
@@ -269,7 +243,7 @@ function getData(rssFromJson) {
         for (let j of Array.from(item.values())) {
             let i = j.toString();
             i = i.toLowerCase();
-            if (unitsOfMeasurement.includes(i)) {
+            if (measurements.includes(i)) {
                 item.delete(i);
             }
         }
