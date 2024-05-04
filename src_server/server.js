@@ -35,73 +35,25 @@ const DB_SETTINGS = {
 
 let readyGroups = {};
 
-const prepositions = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsPrepositions.json'), "utf8");
-const particles = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsParticles.json'), "utf8");
-const pronouns = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsPronouns.json'), "utf8");
-const conjunctions = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsConjunctions.json'), "utf8");
-const measurements = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsMeasurements.json'), "utf8");
+let exceptionWordsFiles = fs.readdirSync(path.resolve(__dirname, 'assets', 'exceptionWords'));
+let exceptionWords = exceptionWordsFiles.map(file => {
+    let words = fs.readFileSync(path.resolve(__dirname, 'assets', 'exceptionWords', file), "utf8");
+    return JSON.parse(words);
+});
 
-const startSRCWords = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsStartSRCWords.json'), "utf8");
+let startSRCWords = fs.readFileSync(path.resolve(__dirname, 'assets', 'wordsStartSRCWords.json'), "utf8");
+startSRCWords = JSON.parse(startSRCWords);
 
-const SRC_LIST = [
-    {
-        url: 'https://www.vedomosti.ru/rss/news.xml',
-        dbname: 'vedomosti_ru_rss_news',
-        errorsDir: path.resolve(__dirname, './errors/vedomosti.txt')
-    },
-    {
-        url: 'https://www.rg.ru/xml/index.xml',
-        dbname: 'rg_ru_xml_index',
-        errorsDir: path.resolve(__dirname, './errors/rg.txt')
-    },
-    {
-        url: 'https://tass.ru/rss/v2.xml',
-        dbname: 'tass_ru_rss_v2',
-        errorsDir: path.resolve(__dirname, './errors/tass.txt')
-    },
-    {
-        url: 'https://tvzvezda.ru/export/rss.xml',
-        dbname: 'tvzvezda_ru_export_rss',
-        errorsDir: path.resolve(__dirname, './errors/tvzvezda.txt')
-    },
-    {
-        url: 'https://russian.rt.com/rss',
-        dbname: 'russian_rt_com_rss',
-        errorsDir: path.resolve(__dirname, './errors/rt.txt')
-    },
-    {
-        url: 'https://www.cnews.ru/inc/rss/news.xml',
-        dbname: 'cnews_ru_inc_rss_news',
-        errorsDir: path.resolve(__dirname, './errors/cnews.txt')
-    },
-    {
-        url: 'https://3dnews.ru/news/rss/',
-        dbname: '3dnews_ru_news_rss',
-        errorsDir: path.resolve(__dirname, './errors/3dnews.txt')
-    },
-    {
-        url: 'https://www.ixbt.com/export/news.rss',
-        dbname: 'ixbt_com_export_news',
-        errorsDir: path.resolve(__dirname, './errors/ixbt.txt')
-    },
-    {
-        url: 'https://habr.com/ru/rss/news/?fl=ru',
-        dbname: 'habr_com_ru_rss_news',
-        errorsDir: path.resolve(__dirname, './errors/habr.txt')
-    },
-    {
-        url: 'https://ria.ru/export/rss2/archive/index.xml',
-        dbname: 'ria_ru_export_rss2_archive_index',
-        errorsDir: path.resolve(__dirname, './errors/ria.txt')
-    }
-];
+let SRC_LIST = fs.readFileSync(path.resolve(__dirname, 'assets', 'srcList.json'), "utf8");
+SRC_LIST = JSON.parse(SRC_LIST);
 
 // first run
 new Promise((resolve, reject) => {
     resolve(selectQueryToDB());
 }).then(newObj => {
     fs.writeFileSync(path.resolve(__dirname, 'readyGroups.txt'), JSON.stringify(getData(newObj)));
-    return 1;}
+    return 1;
+}
 );
 
 setInterval(() => {
@@ -116,17 +68,16 @@ setInterval(() => {
             res.forEach((result, num) => {
                 if (result.status == "fulfilled") {
                     loadToDB(result.value, SRC_LIST[num]['dbname']);
-                    fs.appendFileSync(path.resolve(__dirname, './errors/check.txt'), `\n${new Date()} ${Date.now()} ${num} ${SRC_LIST[num]['dbname']}`);
                 }
-                if (result.status == "rejected") {
-                    fs.appendFileSync(SRC_LIST[num]['errorsDir'], `\n${new Date()} ${Date.now()} ${result.reason}`);
+                else if (result.status == "rejected") {
+                    // todo: add in table of tb rejected results 
                 }
             });
-            
+
         })
         .then(() => selectQueryToDB())
         .then(newObj => getData(newObj));
-    }, timeInterval);
+}, timeInterval);
 
 app.use(express.static(path.resolve(__dirname, '../build_client')));
 
@@ -136,7 +87,6 @@ app.use((request, response, next) => {
         connection.query(createDB(item['dbname']))
             .finally(() => connection.end());
     });
-
     next();
 });
 
@@ -146,7 +96,6 @@ app.get('/root', (req, res) => {
             let fileData = fs.readFileSync(path.resolve(__dirname, 'readyGroups.txt'), "utf8");
             readyGroups = JSON.parse(fileData);
         }
-
         resolve(JSON.stringify(readyGroups));
     }).then(json => res.json(json));
 });
@@ -194,61 +143,10 @@ function getData(rssFromJson) {
         }
     });
 
-    // remove prepositions
-    wordSet.forEach(item => {
-        for (let j of Array.from(item.values())) {
-            let i = j.toString();
-            i = i.toLowerCase();
-            if (prepositions.includes(i)) {
-                item.delete(i);
-            }
-        }
+    exceptionWords.forEach(words => {
+        filterWords(wordSet, words)
     });
 
-    // remove particles
-    wordSet.forEach(item => {
-        for (let j of Array.from(item.values())) {
-            let i = j.toString();
-            i = i.toLowerCase();
-            if (particles.includes(i)) {
-                item.delete(i);
-            }
-        }
-    });
-
-    // remove pronouns
-    wordSet.forEach(item => {
-        for (let j of Array.from(item.values())) {
-            let i = j.toString();
-            i = i.toLowerCase();
-            if (pronouns.includes(i)) {
-                item.delete(i);
-            }
-        }
-    });
-
-    // remove conjunctions
-    wordSet.forEach(item => {
-        for (let j of Array.from(item.values())) {
-            let i = j.toString();
-            i = i.toLowerCase();
-            if (conjunctions.includes(i)) {
-                item.delete(i);
-            }
-        }
-    });
-
-    // remove units of measurement
-    wordSet.forEach(item => {
-        for (let j of Array.from(item.values())) {
-            let i = j.toString();
-            i = i.toLowerCase();
-            if (measurements.includes(i)) {
-                item.delete(i);
-            }
-        }
-    });
-    
     for (let i = 0; i < wordSet.length; i++) {
         let setA = wordSet[i];
         for (let j = i + 1; j < wordSet.length; j++) {
@@ -257,7 +155,6 @@ function getData(rssFromJson) {
             let index = 0;
 
             for (let sA of Array.from(setA.values())) {
-                // console.log('5_____ ')
                 if (index >= matchesWords) break;
                 if (setB.has(sA)) {
                     matchWords.push(sA);
@@ -271,7 +168,6 @@ function getData(rssFromJson) {
                     groups[i].push(rss[j]);
                     wordSet[j].clear();
                     setA = new Set(matchWords);
-                    // console.log(matchWords)
                     break;
                 }
                 index++;
@@ -286,6 +182,19 @@ function getData(rssFromJson) {
     }
     readyGroups = groups;
     return groups;
+}
+
+function filterWords(inputWords, forbiddenWords) {
+    inputWords.forEach(item => {
+        for (let j of Array.from(item.values())) {
+            let i = j.toString();
+            i = i.toLowerCase();
+            if (forbiddenWords.includes(i)) {
+                item.delete(i);
+            }
+        }
+    });
+    return inputWords;
 }
 
 function extractToObjWithKeys(json) {

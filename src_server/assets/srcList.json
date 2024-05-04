@@ -1,0 +1,42 @@
+[
+    {
+        "url": "https://www.vedomosti.ru/rss/news.xml",
+        "dbname": "vedomosti_ru_rss_news"
+    },
+    {
+        "url": "https://www.rg.ru/xml/index.xml",
+        "dbname": "rg_ru_xml_index"
+    },
+    {
+        "url": "https://tass.ru/rss/v2.xml",
+        "dbname": "tass_ru_rss_v2"
+    },
+    {
+        "url": "https://tvzvezda.ru/export/rss.xml",
+        "dbname": "tvzvezda_ru_export_rss"
+    },
+    {
+        "url": "https://russian.rt.com/rss",
+        "dbname": "russian_rt_com_rss"
+    },
+    {
+        "url": "https://www.cnews.ru/inc/rss/news.xml",
+        "dbname": "cnews_ru_inc_rss_news"
+    },
+    {
+        "url": "https://3dnews.ru/news/rss/",
+        "dbname": "3dnews_ru_news_rss"
+    },
+    {
+        "url": "https://www.ixbt.com/export/news.rss",
+        "dbname": "ixbt_com_export_news"
+    },
+    {
+        "url": "https://habr.com/ru/rss/news/?fl=ru",
+        "dbname": "habr_com_ru_rss_news"
+    },
+    {
+        "url": "https://ria.ru/export/rss2/archive/index.xml",
+        "dbname": "ria_ru_export_rss2_archive_index"
+    }
+]
