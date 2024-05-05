@@ -1,27 +1,23 @@
-const VERSION = '0.14.17';
 
 const dialogNews = document.getElementById("dialogNews");
 const titles = document.getElementById("titles");
 const innerDialogNews = document.getElementById("innerDialogNews");
-const header = document.getElementById("header");
 const closeNewsWrapper = document.getElementById("closeNewsWrapper");
 const NewsHeaderInn = document.getElementById("NewsHeaderInn");
 
-header.textContent = `pulse v.${VERSION}`;
-
-window.addEventListener('DOMContentLoaded', () => {
-    getNews();
-});
+window.addEventListener('DOMContentLoaded', () => {     //
+    getNews();      //
+});     //
 
 dialogNews.addEventListener('close', () => {
     document.body.classList.remove("Scroll-lock");
 });
 
-function getNews() {
-    fetch("/root")
-        .then(res => res.json())
-        .then(data => JSON.parse(data))
-        .then(titles => showTitles(titles))
+function getNews() { //
+    fetch("/root") //
+        .then(res => res.json()) //
+        .then(data => JSON.parse(data)) //
+        .then(titles => showTitles(titles)) //
         .then(words => setEventListenersForLabels(words));
 }
 
