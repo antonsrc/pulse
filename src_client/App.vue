@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, reactive, computed } from 'vue'
+import Title from './Title.vue'
 
-const VERSION = '0.14.17';
+const VERSION = '0.15.17';
 const headerHeight = '1.1rem';
 
 onMounted(() => {
@@ -9,45 +10,25 @@ onMounted(() => {
 })
 
 let titles = reactive({ json: 0 });
+let counts = reactive([]);
 
 async function getNews() {
     const res = await fetch("/root");
     const json = await res.json();
     titles.json = await JSON.parse(json);
-    // .then(titles => showTitles(titles))
-    //     .then(words => setEventListenersForLabels(words));
+    counts = Object.values(titles.json).map(i => i.length - 1);
 }
-
-function showTitles(data) {
-    // titles.innerHTML = '';
-
-    // let i = 1;
-    for (let item in data) {
-        // let spanWord = document.createElement('div');
-
-        let lastNum = data[item].length - 1;
-        let count = data[item].length - 1;
-        spanWord.textContent = data[item][lastNum].title + ` (${count})`;
-        spanWord.style.backgroundColor = `rgba(50, 240, 115, ${0.02 * count})`;
-
-        spanWord.id = 'title_' + encodeURIComponent(item);
-        // spanWord.classList.add("LinkNews");
-        titles.append(spanWord);
-        // i++;
-    }
-    return data;
-}
-
-
-
 </script>
 
 <template>
     <div id="header">pulse v.{{ VERSION }}</div>
     <div id="titles">
-        <div className="LinkNews" v-for="(item, key, index) in titles.json" :id="'title_' + encodeURIComponent(key)"
-            :style="{ backgroundColor: `rgba(0, 153, 255, ${0.02 * (item.length - 1)})` }">{{ index + 1 }} {{
-                item[item.length - 1].title }} ({{ item.length - 1 }})</div>
+        <Title v-for="(item, key, i) in titles.json" :id="'title_' + encodeURIComponent(key)" :title="{
+            num: i + 1,
+            title: item[counts[i]].title,
+            countTitles: counts[i],
+            allTitles: item.slice(1)
+        }" :style="{ backgroundColor: 'rgba(25, 175, 100,' + 0.03 * counts[i] + ')' }" />
     </div>
 </template>
 
@@ -57,19 +38,13 @@ function showTitles(data) {
     order: 1;
     width: 100%;
     color: rgb(255, 255, 255);
-    background: rgba(0, 153, 255, 0.5);
+    background: rgba(25, 175, 100, 0.847);
     text-align: right;
     position: fixed;
     height: v-bind('headerHeight');
     font-size: calc(v-bind('headerHeight') - 0.3rem);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-}
-
-.LinkNews {
-    cursor: pointer;
-    padding: 0.3rem 0.7rem 0.5rem;
-    margin: 0.1rem 0.1rem;
 }
 
 #titles {
